@@ -35,14 +35,13 @@ const SCENES = [
 
 function letters(title: string) {
   const words = title.split(" ");
-  return words.map((word, wordIndex) => (
+  return words.map((word) => (
     <span key={word} className="story-word">
       {word.split("").map((letter, letterIndex) => (
         <span key={`${word}-${letterIndex}`} className="story-letter">
           {letter}
         </span>
       ))}
-      {wordIndex < words.length - 1 ? " " : null}
     </span>
   ));
 }

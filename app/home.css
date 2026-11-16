@@ -85,6 +85,9 @@
 .story-letter {
   display: inline-block;
 }
+.story-word:not(:last-child) {
+  margin-right: 0.28em;
+}
 .story-word {
   white-space: nowrap;
 }
