@@ -225,9 +225,52 @@
     stroke-dashoffset: 0;
   }
 }
+.flow-stream {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: flowDraw 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.flow-pulse {
+  stroke-dasharray: 0.16 0.84;
+  stroke-dashoffset: 0;
+  animation: flowPulse 2.4s linear infinite;
+}
+.flow-node {
+  animation: flowNode 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.flow-bead {
+  filter: drop-shadow(0 0 4px rgb(255 255 255 / 0.9));
+}
+@keyframes flowDraw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes flowPulse {
+  to {
+    stroke-dashoffset: -1;
+  }
+}
+@keyframes flowNode {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
 @media (prefers-reduced-motion: reduce) {
-  .baton-ribbon-sweep {
+  .baton-ribbon-sweep,
+  .flow-pulse,
+  .flow-bead {
     display: none;
+  }
+  .flow-stream,
+  .flow-node {
+    animation: none;
+    stroke-dashoffset: 0;
   }
 }
 @media (max-width: 690px) {

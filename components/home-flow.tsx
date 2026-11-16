@@ -27,47 +27,80 @@ const SCENARIOS = {
   },
 } as const;
 
-function Ribbon({ prefix, blue, green }: { prefix: string; blue: string; green: string }) {
-  const paths = [
-    { id: "notReached", d: "M 120,150 C 180,150 190,80 250,80 L 250,118 C 190,118 180,185 120,185 Z", fill: `url(#${prefix}-blue)`, sweep: blue },
-    { id: "reached", d: "M 120,185 C 180,185 180,240 240,240 L 240,265 C 180,265 180,215 120,215 Z", fill: `url(#${prefix}-green)`, sweep: green },
-    { id: "booked", d: "M 330,240 C 375,240 380,200 440,200 L 440,225 C 380,225 375,250 330,250 Z", fill: `url(#${prefix}-booked)`, sweep: green },
-    { id: "notBooked", d: "M 330,255 C 375,255 385,275 440,275 L 440,290 C 385,290 375,270 330,270 Z", fill: `url(#${prefix}-leak)`, sweep: green },
+const BOX = { w: 128, h: 68 };
+
+function countOf(value: string) {
+  return Number(value.replace(/,/g, "")) || 0;
+}
+
+function band(part: number, whole: number, min: number, max: number) {
+  const share = whole > 0 ? Math.max(0, Math.min(1, part / whole)) : 0;
+  return min + (max - min) * share;
+}
+
+function FlowChart({ prefix, nodes }: { prefix: string; nodes: { fit: string; notReached: string; reached: string; booked: string; notBooked: string } }) {
+  const fit = countOf(nodes.fit);
+  const notReached = countOf(nodes.notReached);
+  const reached = countOf(nodes.reached);
+  const booked = countOf(nodes.booked);
+  const notBooked = countOf(nodes.notBooked);
+  const boxes = {
+    fit: { x: 16, y: 166 },
+    notReached: { x: 286, y: 28 },
+    reached: { x: 286, y: 176 },
+    booked: { x: 612, y: 118 },
+    notBooked: { x: 612, y: 286 },
+  };
+  const fitOut = { x: boxes.fit.x + BOX.w + 8, y: boxes.fit.y + BOX.h / 2 };
+  const missedIn = { x: boxes.notReached.x - 8, y: boxes.notReached.y + BOX.h / 2 };
+  const reachedIn = { x: boxes.reached.x - 8, y: boxes.reached.y + BOX.h / 2 };
+  const reachedOut = { x: boxes.reached.x + BOX.w + 8, y: boxes.reached.y + BOX.h / 2 };
+  const bookedIn = { x: boxes.booked.x - 8, y: boxes.booked.y + BOX.h / 2 };
+  const openIn = { x: boxes.notBooked.x - 8, y: boxes.notBooked.y + BOX.h / 2 };
+  const streams = [
+    { id: "miss", d: `M ${fitOut.x} ${fitOut.y} C 210 ${fitOut.y}, 220 ${missedIn.y}, ${missedIn.x} ${missedIn.y}`, width: band(notReached, fit, 8, 34), color: "#60a5fa", delay: "0s" },
+    { id: "reach", d: `M ${fitOut.x} ${fitOut.y} C 210 ${fitOut.y}, 220 ${reachedIn.y}, ${reachedIn.x} ${reachedIn.y}`, width: band(reached, fit, 10, 40), color: "#34d399", delay: "0.15s" },
+    { id: "booked", d: `M ${reachedOut.x} ${reachedOut.y} C 470 ${reachedOut.y}, 500 ${bookedIn.y}, ${bookedIn.x} ${bookedIn.y}`, width: band(booked, reached, 8, 32), color: "#059669", delay: "0.45s" },
+    { id: "open", d: `M ${reachedOut.x} ${reachedOut.y} C 470 ${reachedOut.y}, 500 ${openIn.y}, ${openIn.x} ${openIn.y}`, width: band(notBooked, reached, 6, 26), color: "#94a3b8", delay: "0.6s" },
   ];
+  const labels = [
+    { key: "fit", ...boxes.fit, bar: "#1d4ed8", kicker: "FIT", title: "positive", value: nodes.fit },
+    { key: "notReached", ...boxes.notReached, bar: "#ef4444", kicker: "Not reached", title: "", value: nodes.notReached },
+    { key: "reached", ...boxes.reached, bar: "#059669", kicker: "Reached", title: "", value: nodes.reached },
+    { key: "booked", ...boxes.booked, bar: "#059669", kicker: "Booked", title: "", value: nodes.booked },
+    { key: "notBooked", ...boxes.notBooked, bar: "#94a3b8", kicker: "Not booked", title: "", value: nodes.notBooked },
+  ];
+
   return (
-    <svg className="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 540 320" preserveAspectRatio="none" aria-hidden="true">
+    <svg viewBox="0 0 760 400" className="h-auto w-full" role="img" aria-label="Example flow from a positive FIT result">
       <defs>
-        <linearGradient id={`${prefix}-blue`} x1="0%" x2="100%">
-          <stop offset="0%" stopColor="#2563eb" stopOpacity="0.55" />
-          <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.25" />
-        </linearGradient>
-        <linearGradient id={`${prefix}-green`} x1="0%" x2="100%">
-          <stop offset="0%" stopColor="#2563eb" stopOpacity="0.5" />
-          <stop offset="55%" stopColor="#10b981" stopOpacity="0.45" />
-          <stop offset="100%" stopColor="#059669" stopOpacity="0.5" />
-        </linearGradient>
-        <linearGradient id={`${prefix}-booked`} x1="0%" x2="100%">
-          <stop offset="0%" stopColor="#10b981" stopOpacity="0.65" />
-          <stop offset="100%" stopColor="#059669" stopOpacity="0.8" />
-        </linearGradient>
-        <linearGradient id={`${prefix}-leak`} x1="0%" x2="100%">
-          <stop offset="0%" stopColor="#10b981" stopOpacity="0.3" />
-          <stop offset="100%" stopColor="#94a3b8" stopOpacity="0.4" />
-        </linearGradient>
-        {paths.map((path) => (
-          <linearGradient key={path.id} id={`${prefix}-sweep-${path.id}`} x1="0%" x2="100%">
-            <stop offset="0" stopColor={path.sweep} stopOpacity="0" />
-            <stop offset=".5" stopColor={path.sweep} stopOpacity=".68" />
-            <stop offset="1" stopColor={path.sweep} stopOpacity="0" />
-            <animateTransform attributeName="gradientTransform" type="translate" values="-1 0;1 0;1 0" keyTimes="0;.62;1" dur="4s" repeatCount="indefinite" />
+        {streams.map((stream) => (
+          <linearGradient key={stream.id} id={`${prefix}-${stream.id}`} x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#2563eb" />
+            <stop offset="100%" stopColor={stream.color} />
           </linearGradient>
         ))}
       </defs>
-      {paths.map((path) => (
-        <g key={path.id}>
-          <path d={path.d} fill={path.fill} />
-          <path className="baton-ribbon-sweep" d={path.d} fill={`url(#${prefix}-sweep-${path.id})`} />
+      {streams.map((stream) => (
+        <g key={stream.id}>
+          <path className="flow-stream" d={stream.d} pathLength={1} fill="none" stroke={`url(#${prefix}-${stream.id})`} strokeWidth={stream.width} strokeLinecap="round" style={{ animationDelay: stream.delay }} />
+          <path className="flow-pulse" d={stream.d} pathLength={1} fill="none" stroke="white" strokeWidth={Math.max(3, stream.width * 0.34)} strokeLinecap="round" strokeOpacity="0.9" style={{ animationDelay: `${Number.parseFloat(stream.delay) + 0.9}s` }} />
+          <circle className="flow-bead" r="5.5" fill="white" stroke={stream.color} strokeWidth="2.5">
+            <animateMotion dur="2.6s" begin={`${Number.parseFloat(stream.delay) + 0.9}s`} repeatCount="indefinite" path={stream.d} calcMode="linear" />
+          </circle>
         </g>
+      ))}
+      {labels.map((label, index) => (
+        <foreignObject key={label.key} x={label.x} y={label.y} width={BOX.w} height={BOX.h}>
+          <div className="flow-node flex h-full items-center rounded-xl border border-slate-200 bg-white px-2.5 shadow-md" style={{ animationDelay: `${0.08 + index * 0.08}s` }}>
+            <span className="mr-2 h-8 w-1.5 shrink-0 rounded-full" style={{ background: label.bar }} />
+            <span className="min-w-0 leading-tight">
+              <span className="block text-[10px] font-bold uppercase tracking-wide text-slate-500">{label.kicker}</span>
+              {label.title ? <span className="block text-[11px] font-bold text-slate-800">{label.title}</span> : null}
+              <span className="block text-sm font-black text-slate-950">{label.value}</span>
+            </span>
+          </div>
+        </foreignObject>
       ))}
     </svg>
   );
@@ -177,43 +210,25 @@ function PatternCard({
   return (
     <article className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
       <div className={`absolute inset-x-0 top-0 h-1.5 ${tone === "blue" ? "bg-blue-700" : "bg-emerald-600"}`} />
-      <div className="mb-6 flex items-start justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
             <span className={`text-xl font-extrabold ${tone === "blue" ? "text-blue-700" : "text-emerald-700"}`}>{title}</span>
             <span className="text-xl font-extrabold">bottleneck</span>
             <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold">{pattern}</span>
           </div>
           <p className="mt-1 text-sm text-slate-500">{text}</p>
         </div>
-        <div className="text-right">
+        <div className="shrink-0 sm:text-right">
           <span className="block text-xs font-semibold text-slate-400">Example leakage</span>
           <span className="text-sm font-extrabold text-red-600">{leak}</span>
         </div>
       </div>
-      <div className="relative h-[330px] overflow-hidden rounded-2xl border border-slate-100 bg-slate-50/70">
-        <Ribbon prefix={prefix} blue="#418cff" green="#16d4a6" />
-        <Node className="left-3 top-[125px]" bar="bg-blue-700" kicker="FIT" title="positive" value={nodes.fit} />
-        <Node className="left-[38%] top-[48px]" bar="bg-red-500" kicker="Not reached" value={nodes.notReached} />
-        <Node className="left-[36%] top-[200px]" bar="bg-emerald-600" kicker="Reached" value={nodes.reached} />
-        <Node className="right-3 top-[150px]" bar="bg-emerald-600" kicker="Booked" value={nodes.booked} />
-        <Node className="right-3 top-[240px]" bar="bg-slate-400" kicker="Not booked" value={nodes.notBooked} />
+      <div key={leak} className="overflow-hidden rounded-2xl border border-slate-100 bg-slate-50/70 px-2 py-3">
+        <FlowChart prefix={prefix} nodes={nodes} />
       </div>
       <p className="mt-4 border-t border-slate-100 pt-3 text-xs text-slate-500">These four numbers are an example picture. They do not change the case file or the simulator.</p>
     </article>
-  );
-}
-
-function Node({ className, bar, kicker, title, value }: { className: string; bar: string; kicker: string; title?: string; value: string }) {
-  return (
-    <div className={`absolute z-10 flex items-center rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-md ${className}`}>
-      <span className={`mr-2 h-9 w-1.5 rounded-full ${bar}`} />
-      <span>
-        <span className="block text-[11px] font-bold uppercase tracking-wide text-slate-500">{kicker}</span>
-        {title ? <span className="block text-xs font-bold">{title}</span> : null}
-        <span className="block text-base font-black">{value}</span>
-      </span>
-    </div>
   );
 }
 
