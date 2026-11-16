@@ -123,6 +123,37 @@ describe("routing comparison", () => {
     expect(results[2].examples.R?.eventDay).toBeLessThan(results[0].examples.R?.eventDay ?? 99);
   });
 
+  it("gives a rebooked patient a second attendance draw under every policy", () => {
+    const one: SimFacility[] = [{ id: "a", dailySlots: 1, femaleTeam: false }];
+    const missesOnce = [patient({ id: "M", priority: 2, designated: 0, eligibleIds: ["a"], attendRoll: 0.99, attendRoll2: 0 })];
+    for (const policy of ["current", "shortest_displayed", "capacity_aware"] as const) {
+      const result = simulateRouting(missesOnce, policy, one, ["M"], 12);
+      expect(result.examples.M?.eventDay).not.toBeNull();
+    }
+  });
+
+  it("stops rebooking a patient who misses twice, so the next patient gets the slot", () => {
+    const one: SimFacility[] = [{ id: "a", dailySlots: 1, femaleTeam: false }];
+    const pair = [
+      patient({ id: "N", index: 0, priority: 3, designated: 0, eligibleIds: ["a"], attendRoll: 0.99, attendRoll2: 0.99 }),
+      patient({ id: "W", index: 1, priority: 1, designated: 0, eligibleIds: ["a"] }),
+    ];
+    for (const policy of ["current", "shortest_displayed", "capacity_aware"] as const) {
+      const result = simulateRouting(pair, policy, one, ["N", "W"], 20);
+      expect(result.examples.N?.eventDay).toBeNull();
+      expect(result.examples.N?.booked).toBe(false);
+      expect(result.examples.W?.eventDay).not.toBeNull();
+      expect(result.examples.W?.eventDay ?? 99).toBeLessThanOrEqual(8);
+    }
+  });
+
+  it("does not let capacity-aware assignment complete fewer procedures than current routing on the seeded cohort", () => {
+    const cohort = buildCohort();
+    const current = simulateRouting(cohort, "current");
+    const aware = simulateRouting(cohort, "capacity_aware");
+    expect(aware.completed).toBeGreaterThanOrEqual(current.completed);
+  });
+
   it("scales a shared slot profile without changing the facility set", () => {
     expect(scaleSlots([3, 1, 2], 1)).toEqual([3, 1, 2]);
     expect(scaleSlots([3, 1, 2], 1.3).reduce((sum, value) => sum + value, 0)).toBe(Math.round(6 * 1.3));

@@ -184,8 +184,8 @@ export function buildCohort(seed = DEFAULT_SEED, size = DEFAULT_COHORT_SIZE, anc
     const originId = primary[Math.floor(rand() * primary.length)];
     const eligible: number[] = [];
     BASE_FACILITIES.forEach((facility, facilityIndex) => {
-      if (travelLimited && (facility.id === "tawam" || originId !== "al-ain-central") && facility.id === "tawam") return;
-      if (privateExcluded && (facility.id === "ccad" || facility.id === "bmc")) return;
+      if (travelLimited && (facility.id === "gi-unit-a" || originId !== "al-ain-central") && facility.id === "gi-unit-a") return;
+      if (privateExcluded && (facility.id === "centre-p1" || facility.id === "centre-p3")) return;
       eligible.push(facilityIndex);
     });
     if (eligible.length < 2) {
@@ -194,8 +194,8 @@ export function buildCohort(seed = DEFAULT_SEED, size = DEFAULT_COHORT_SIZE, anc
     const uniqueEligible = [...new Set(eligible)];
     let designatedPool = uniqueEligible;
     if (originId === "al-ain-central") {
-      const tawam = BASE_FACILITIES.findIndex((facility) => facility.id === "tawam");
-      if (uniqueEligible.includes(tawam)) designatedPool = [tawam];
+      const alAinUnit = BASE_FACILITIES.findIndex((facility) => facility.id === "gi-unit-a");
+      if (uniqueEligible.includes(alAinUnit)) designatedPool = [alAinUnit];
     } else {
       const south = BASE_FACILITIES.findIndex((facility) => facility.id === "gi-unit-s");
       if (uniqueEligible.includes(south) && rand() < 0.55) designatedPool = [south];
@@ -491,6 +491,9 @@ export function simulateResource(patients: SimPatient[], policy: ResourcePolicy,
   return summarize(policy.id, patients, doneDay, censored, booked, contactedDay, destination, dailySlots, exampleIds, true);
 }
 
+/** Chance a booked patient attends, per appointment, in the routing comparison. An assumption, not a published rate. */
+export const ROUTING_ATTEND_PROBABILITY = 0.82;
+
 export type RoutingPolicyId = "current" | "shortest_displayed" | "capacity_aware";
 
 export function simulateRouting(
@@ -530,7 +533,10 @@ export function simulateRouting(
   for (let day = 0; day <= horizon; day += 1) {
     for (let index = 0; index < n; index += 1) {
       if (status[index] !== 2 || procedureDay[index] !== day) continue;
-      if (patients[index].attendRoll < 0.82) {
+      // A rebooked patient gets a fresh attendance draw, as in simulateResource. Reusing the first
+      // draw made every second appointment fail by construction.
+      const attendRoll = retried[index] ? patients[index].attendRoll2 : patients[index].attendRoll;
+      if (attendRoll < ROUTING_ATTEND_PROBABILITY) {
         status[index] = 3;
         doneDay[index] = day;
       } else if (!retried[index]) {
@@ -554,7 +560,10 @@ export function simulateRouting(
     if (policyId === "capacity_aware") {
       const waiting: number[] = [];
       for (let index = 0; index < n; index += 1) {
-        if (censored[index] || status[index] === 3 || status[index] === 2) continue;
+        // Status 5 is a patient who missed two appointments. They leave the booking queue, as they do
+        // under the other two policies; otherwise they are rebooked every two days and hold slots
+        // that the rest of the queue never gets.
+        if (censored[index] || status[index] === 3 || status[index] === 2 || status[index] === 5) continue;
         if (patients[index].referralDay <= day) waiting.push(index);
       }
       waiting.sort(compareWaiting);

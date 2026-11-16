@@ -300,7 +300,7 @@ const NARRATIVE: Spec[] = [
     ownerName: "Dr. Khalid Al Nuaimi",
     navigator: "Maha Mansoor, RN",
     femaleTeamRequested: true,
-    endoscopy: "skmc",
+    endoscopy: "gi-unit-e",
     referralSentDay: 1,
     decisionDay: 5,
     decision: "rejected",
@@ -333,7 +333,7 @@ const NARRATIVE: Spec[] = [
       },
     ],
     sbar: {
-      situation: "54-year-old woman with FIT 142 µg/g. Diagnostic colonoscopy is the recorded next procedure. SKMC returned the referral after recording that no eligible slot remained inside the window.",
+      situation: "54-year-old woman with FIT 142 µg/g. Diagnostic colonoscopy is the recorded next procedure. GI Unit E returned the referral after recording that no eligible slot remained inside the window.",
       background: "Asymptomatic in the synthetic note. Maternal history of colonic polyps is listed. Hypertension is listed as controlled. No anticoagulant is listed.",
       assessment: "The case remains open at endoscopy referral. Teach-back is partial. Closure evidence is absent because the procedure has not happened.",
       recommendation: "Record a simulated handover request to an eligible facility with a shorter open queue, then place a local Arabic teach-back note. Do not read a simulated click as a transmitted referral.",
@@ -362,10 +362,10 @@ const NARRATIVE: Spec[] = [
     language: "ar",
     resultDaysAgo: 20,
     physician: "Dr. Mona Al Hashimi",
-    ownerTeam: "CCAD booking team",
+    ownerTeam: "Centre P1 booking team",
     ownerName: "Booking team",
     navigator: "Rashed Al Ali, RN",
-    endoscopy: "ccad",
+    endoscopy: "centre-p1",
     referralSentDay: 2,
     decisionDay: 3,
     decision: "accepted",
@@ -455,7 +455,7 @@ const NARRATIVE: Spec[] = [
     ownerTeam: "Screening programme",
     ownerName: "Programme clerk",
     navigator: "Rashed Al Ali, RN",
-    endoscopy: "tawam",
+    endoscopy: "gi-unit-a",
     referralSentDay: 2,
     decisionDay: 4,
     decision: "accepted",
@@ -484,9 +484,9 @@ const OPEN_QUEUE: Spec[] = [
   ["FIT-26831", "P2 booking", "centre-p2", "booking", 6, "limited_slots", true],
   ["FIT-26832", "P2 acceptance", "centre-p2", "referral", 2, "unknown", false],
   ["FIT-26833", "P2 report", "centre-p2", "pathology", 4, "clinical_info", false],
-  ["FIT-26841", "SKMC booking", "skmc", "booking", 9, "limited_slots", false],
-  ["FIT-26842", "CCAD booking", "ccad", "booking", 2, "unknown", false],
-  ["FIT-26843", "Tawam booking", "tawam", "booking", 7, "interpreter_transport", false],
+  ["FIT-26841", "GI Unit E booking", "gi-unit-e", "booking", 9, "limited_slots", false],
+  ["FIT-26842", "Centre P1 booking", "centre-p1", "booking", 2, "unknown", false],
+  ["FIT-26843", "GI Unit A booking", "gi-unit-a", "booking", 7, "interpreter_transport", false],
 ].map((row, index) => {
   const [id, label, endoscopy, stage, ageDays, reason, slot] = row;
   const stageName = stage as Stage;
@@ -617,7 +617,7 @@ const EARLY: Spec[] = [0, 1, 2, 3, 4].map((index) => ({
 function withStableEmiratesId(items: ScreeningCase[]): ScreeningCase[] {
   return items.map((item) => {
     if (item.id !== "FIT-26771") return item;
-    return { ...item, emiratesId: "784-1970-4921882-1" };
+    return { ...item, emiratesId: "784-0000-4921882-0" };
   });
 }
 
