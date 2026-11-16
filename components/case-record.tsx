@@ -96,7 +96,7 @@ export function CaseRecord({ caseId }: { caseId: string }) {
             </div>
           </div>
         </div>
-        <div className="mt-6">
+        <div className="mt-6" data-tour="record-milestones">
           <h2 className="font-bold">Screening-to-intervention milestones</h2>
           <p className="text-xs text-slate-500">Updated from the case file in this browser. Not a live diagnostic-report webhook.</p>
           <div className="mt-3 grid gap-3 md:grid-cols-5">
@@ -113,7 +113,7 @@ export function CaseRecord({ caseId }: { caseId: string }) {
 
       <div className="grid items-start gap-6 lg:grid-cols-12">
         <div className="flex flex-col gap-6 lg:col-span-7">
-          <section id="routing" className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-100">
+          <section id="routing" data-tour="record-routing" className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-100">
             <h2 className="text-lg font-bold">Referral options in the case file</h2>
             <p className="text-sm text-slate-500">Ranked by whether the facility already returned this case, then by the open booking age in the same file. This is not a live waiting-list search.</p>
             <div className="mt-4 flex flex-col gap-3">

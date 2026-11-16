@@ -34,7 +34,7 @@ export function Bottlenecks() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <section data-tour="facility-table" className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <h2 className="font-bold">Facility-by-stage wait</h2>
           <p className="mb-4 text-sm text-slate-500">Each cell shows the median open-case age, then the median completed transition. Select a cell to open those cases. Orange means the open median is over 7 days.</p>
           <div className="overflow-x-auto">
@@ -98,7 +98,7 @@ export function Bottlenecks() {
         </section>
       </div>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <section data-tour="facility-worklist" className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
           <div>
             <h2 className="text-lg font-bold">Referral worklist — {facilityId === "all" ? "all endoscopy facilities" : facilityShort(facilityId)}</h2>

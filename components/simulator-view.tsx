@@ -104,7 +104,7 @@ export function SimulatorView() {
       </section>
 
       <div className="grid items-start gap-6 lg:grid-cols-12">
-        <section className="flex flex-col gap-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-100 lg:col-span-5">
+        <section data-tour="sim-controls" className="flex flex-col gap-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-100 lg:col-span-5">
           <h2 className="font-bold">Navigation experiment</h2>
           <label className="rounded-xl bg-slate-50 p-4">
             <span className="flex justify-between font-semibold"><span>A. Navigator calls / day</span><span className="text-blue-700">{calls}</span></span>

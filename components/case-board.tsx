@@ -49,7 +49,7 @@ export function CaseBoard() {
         </div>
       </div>
 
-      <section className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
+      <section data-tour="board-kpis" className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
         <Kpi label="Open positive FIT" value={String(metrics.open)} note={`+${metrics.newThisWeek} with result in 7 days`} icon="science" />
         <Kpi label="Overdue handovers" value={String(metrics.overdue)} note="Open, unbooked, past 14 days" icon="warning" alert />
         <Kpi label="Rejected referrals" value={String(metrics.rejected)} note="Returned or eligible-slot rejection" icon="sync_problem" />
@@ -87,7 +87,7 @@ export function CaseBoard() {
             <span className="text-slate-500">Sorted by stall score</span>
           </div>
           {filtered.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center">
+            <div data-tour="board-queue" className="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center">
               <p className="font-bold">No cases match these filters.</p>
               <p className="mt-1 text-sm text-slate-500">Clear the search or choose another stage. The case file itself is unchanged.</p>
               <button type="button" className="mt-4 rounded-full bg-blue-700 px-4 py-2 text-sm font-bold text-white" onClick={() => { setQuery(""); setStage("all"); }}>
@@ -95,10 +95,11 @@ export function CaseBoard() {
               </button>
             </div>
           ) : (
-            filtered.map((item) => (
+            filtered.map((item, index) => (
               <button
                 key={item.id}
                 type="button"
+                data-tour={index === 0 ? "board-queue" : undefined}
                 onClick={() => setSelectedId(item.id)}
                 className={`rounded-2xl bg-white p-4 text-left shadow-sm ring-1 ring-slate-100 ${selected?.id === item.id ? "ring-2 ring-blue-700" : "hover:shadow-md"}`}
               >
@@ -136,7 +137,7 @@ export function CaseBoard() {
 
         <aside className="flex flex-col gap-3 lg:sticky lg:top-[9.5rem] lg:col-span-5">
           {selected ? (
-            <div className="rounded-2xl bg-white p-5 shadow-md">
+            <div data-tour="board-inspector" className="rounded-2xl bg-white p-5 shadow-md">
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                 <span className="font-bold">Inspector · {selected.id}</span>
                 {isOverdue(selected) ? <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-extrabold text-red-800">Action needed</span> : <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-bold">In view</span>}
@@ -210,7 +211,7 @@ export function CaseBoard() {
               </p>
             </div>
           ) : (
-            <div className="rounded-2xl border border-dashed border-slate-300 p-6 text-sm text-slate-500">Select a case to inspect its stage, owner, handover, next action, and history.</div>
+            <div data-tour="board-inspector" className="rounded-2xl border border-dashed border-slate-300 p-6 text-sm text-slate-500">Select a case to inspect its stage, owner, handover, next action, and history.</div>
           )}
         </aside>
       </div>
