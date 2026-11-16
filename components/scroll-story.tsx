@@ -223,7 +223,7 @@ export function ScrollStory() {
         {SCENES.map((scene, index) => {
           const Heading = index === 0 ? "h1" : "h2";
           return (
-            <article key={scene.id} id={scene.id} className={index === 0 ? "scroll-scene active" : "scroll-scene"}>
+            <article key={scene.id} id={scene.id} data-scene={scene.orb} className={index === 0 ? "scroll-scene active" : "scroll-scene"}>
               <div className="scene-text">
                 <Heading aria-label={scene.label}>
                   <span aria-hidden="true">
@@ -241,7 +241,7 @@ export function ScrollStory() {
                 </a>
               </div>
               <figure>
-                <Image src={scene.photo} alt={scene.alt} fill sizes="100vw" priority={index === 0} />
+                <Image src={scene.photo} alt={scene.alt} fill sizes="100vw" quality={100} priority={index === 0} unoptimized />
               </figure>
             </article>
           );
