@@ -62,8 +62,8 @@ const COPY: Record<"en" | "ar", Record<TourStepId, StepCopy>> = {
       body: "The inspector follows the selected case. Its handover and outreach buttons record a simulated action in this browser. Nothing is transmitted.",
     },
     milestones: {
-      title: "Closure is separate from attendance",
-      body: "FIT-26771 runs from the FIT result to the report. A colonoscopy can be attended while closure is still pending. Closure needs the report and a disposition.",
+      title: "Attending does not close the case",
+      body: "FIT-26771 follows one person from the positive test to the written report.\n\nThey can attend the colonoscopy, and the case can still be open.\n\nIt closes only when two things are on file: the report, and what the care team decided.",
     },
     routing: {
       title: "Destinations come from the case file",
@@ -116,8 +116,8 @@ const COPY: Record<"en" | "ar", Record<TourStepId, StepCopy>> = {
       body: "يتبع المفتش الحالة المختارة. أزرار التسليم والتواصل تسجّل إجراءً محاكىً في هذا المتصفح. لا يُرسل شيء.",
     },
     milestones: {
-      title: "الإغلاق منفصل عن الحضور",
-      body: "يعرض FIT-26771 الطريق من نتيجة FIT إلى التقرير. يمكن حضور التنظير مع بقاء الإغلاق معلّقًا. الإغلاق يحتاج التقرير والقرار.",
+      title: "الحضور لا يغلق الحالة",
+      body: "يتبع FIT-26771 شخصًا واحدًا من الفحص الإيجابي إلى التقرير المكتوب.\n\nيمكنه حضور التنظير وتبقى الحالة مفتوحة.\n\nتُغلق فقط عندما يُحفظ شيئان: التقرير، وما قرره فريق الرعاية.",
     },
     routing: {
       title: "الوجهات من ملف الحالات",

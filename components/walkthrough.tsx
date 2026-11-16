@@ -262,8 +262,8 @@ function Tour({
             {ui.skip}
           </button>
         </div>
-        <h2 id="tour-title" className="mt-2 text-base font-extrabold tracking-tight text-slate-950">{step.title}</h2>
-        <p id="tour-body" className="mt-1 text-sm leading-relaxed text-slate-600">{step.body}</p>
+        <h2 id="tour-title" className="mt-2 text-lg font-extrabold tracking-tight text-slate-950">{step.title}</h2>
+        <p id="tour-body" className="mt-2 whitespace-pre-line text-[15px] leading-6 text-slate-800">{step.body}</p>
         <div className="mt-3 h-1 overflow-hidden rounded-full bg-slate-100">
           <div className="h-full rounded-full bg-blue-700" style={{ width: `${((index + 1) / steps.length) * 100}%` }} />
         </div>
