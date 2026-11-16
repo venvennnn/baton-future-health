@@ -223,7 +223,7 @@ export function ScrollStory() {
           const Heading = index === 0 ? "h1" : "h2";
           return (
             <article key={scene.id} id={scene.id} data-scene={scene.orb} className={index === 0 ? "scroll-scene active" : "scroll-scene"}>
-              <div className="scene-text">
+              <div className="scene-text" data-tour={index === 0 ? "hero-story" : undefined}>
                 <Heading aria-label={scene.label}>
                   <span aria-hidden="true">
                     <span className="story-orb">

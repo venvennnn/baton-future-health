@@ -3,6 +3,7 @@
 import { kpis } from "@/lib/analytics";
 import { FACILITIES } from "@/lib/facilities";
 import { useDemo } from "@/components/providers";
+import { useWalkthrough } from "@/components/walkthrough";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -40,6 +41,7 @@ const COPY = {
 export function Shell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { cases, clinicId, setClinicId, locale, setLocale } = useDemo();
+  const tour = useWalkthrough();
   const text = COPY[locale];
   const overdue = kpis(cases).overdue;
   const links = [
@@ -54,7 +56,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-white text-slate-900" lang={locale} style={{ ["--baton-header" as string]: "8.75rem" }}>
       <header className="fixed inset-x-0 top-0 z-50 border-b border-slate-200/80 bg-white/95 shadow-[0_2px_12px_rgba(15,23,42,0.03)] backdrop-blur">
-        <div className="bg-amber-50 px-4 py-1 text-center text-[12px] font-semibold text-amber-950">{text.banner}</div>
+        <div data-tour="demo-banner" className="bg-amber-50 px-4 py-1 text-center text-[12px] font-semibold text-amber-950">{text.banner}</div>
         <div className="mx-auto flex h-28 max-w-[1400px] flex-col justify-between px-4 sm:px-6">
           <div className="flex h-16 items-center justify-between gap-3">
             <div className="flex items-center gap-3">
@@ -89,6 +91,16 @@ export function Shell({ children }: { children: React.ReactNode }) {
                   ))}
                 </select>
               </label>
+              {tour.running ? null : (
+                <button
+                  type="button"
+                  onClick={tour.start}
+                  className="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-2 text-xs font-bold text-blue-800"
+                >
+                  <span className="material-symbols-outlined text-[16px]">route</span>
+                  <span className="hidden md:inline">{tour.label}</span>
+                </button>
+              )}
               <Link href="/cases" className="inline-flex items-center gap-1 rounded-full bg-blue-700 px-3 py-2 text-xs font-semibold text-white shadow-md hover:bg-blue-800">
                 <span className="material-symbols-outlined text-[16px]">play_arrow</span>
                 <span className="hidden sm:inline">{text.demo}</span>
@@ -102,7 +114,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
               </button>
             </div>
           </div>
-          <nav className="flex h-12 items-center gap-1 overflow-x-auto pb-2 text-xs font-semibold">
+          <nav data-tour="main-nav" className="flex h-12 items-center gap-1 overflow-x-auto pb-2 text-xs font-semibold">
             {links.map((link) => {
               const on = link.href === "/"
                 ? pathname === "/"

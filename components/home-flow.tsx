@@ -147,7 +147,7 @@ export function HomeFlow() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+      <div data-tour="home-flows" className="grid grid-cols-1 gap-8 lg:grid-cols-2">
         <PatternCard title="Outreach" tone="blue" pattern="Pattern A" text="Patient contact gap: high drop-off before a navigator speaks with the patient." leak={picture.leftLeak} nodes={picture.left} prefix="flow-a" />
         <PatternCard title="Booking" tone="green" pattern="Pattern B" text="Scheduling gap: patients are contacted, then wait for an endoscopy slot." leak={picture.rightLeak} nodes={picture.right} prefix="flow-b" />
       </div>
