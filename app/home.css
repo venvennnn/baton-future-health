@@ -1,0 +1,248 @@
+.scroll-story {
+  background: #fff;
+  color: #172634;
+}
+.story-stage {
+  position: relative;
+  max-width: none;
+}
+.scroll-scene {
+  position: relative;
+  display: flex;
+  min-height: 72vh;
+  align-items: center;
+  padding: 40px 8vw;
+  isolation: isolate;
+}
+.scene-text {
+  position: relative;
+  max-width: 680px;
+}
+.scene-text h1,
+.scene-text h2 {
+  font-size: clamp(39px, 6.4vw, 105px);
+  font-weight: 750;
+  letter-spacing: -0.078em;
+  line-height: 1.01;
+  margin: 0;
+}
+.scene-text em {
+  font-style: normal;
+  color: #32716a;
+}
+.scene-text p {
+  font-size: clamp(14px, 1.4vw, 20px);
+  line-height: 1.65;
+  color: #526270;
+  margin: 24px 0;
+  max-width: 360px;
+}
+.scene-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 18px;
+  padding: 11px 15px;
+  border-radius: 5px;
+  background: #173e3c;
+  color: white;
+  font-size: 13px;
+  font-weight: 700;
+}
+.scroll-scene figure {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  height: auto;
+  border-radius: 0;
+  overflow: hidden;
+  background: #fff;
+  z-index: -1;
+}
+.scroll-scene img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 70% 42%;
+}
+.scroll-scene figure::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, #fff 0%, #fff 15%, #fffffff5 30%, #ffffff80 48%, #ffffff03 75%),
+    linear-gradient(0deg, #fff 0%, #ffffff00 22%);
+}
+.story-progress {
+  display: none;
+}
+.story-word,
+.story-letter {
+  display: inline-block;
+}
+.story-word {
+  white-space: nowrap;
+}
+.story-orb {
+  display: inline-block;
+  width: 0.81em;
+  height: 0.81em;
+  margin-right: 0.15em;
+  vertical-align: -0.035em;
+  filter: drop-shadow(0 0.07em 0.09em #173e3c35);
+}
+.story-orb svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .scroll-story.enhanced {
+    height: 260vh;
+  }
+  .enhanced .story-stage {
+    position: sticky;
+    top: var(--baton-header, 8.75rem);
+    height: calc(100vh - var(--baton-header, 8.75rem));
+    height: calc(100dvh - var(--baton-header, 8.75rem));
+    overflow: hidden;
+  }
+  .enhanced .scroll-scene {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    min-height: 0;
+  }
+  .enhanced .scroll-scene.in-frame {
+    visibility: visible;
+    opacity: 1;
+  }
+  .enhanced .scroll-scene figure {
+    opacity: var(--photo, 1);
+  }
+  .enhanced .scroll-scene img {
+    transform: scale(var(--zoom, 1));
+    transform-origin: 70% 44%;
+  }
+  .enhanced .scroll-scene.active {
+    z-index: 1;
+  }
+  .enhanced .story-progress {
+    display: flex;
+    position: absolute;
+    left: 8vw;
+    bottom: 18px;
+    gap: 5px;
+    z-index: 8;
+  }
+  .story-progress i {
+    width: 19px;
+    height: 2px;
+    background: #ccdad5;
+    display: block;
+  }
+  .story-progress .active {
+    background: #32716a;
+  }
+  .enhanced .story-letter {
+    opacity: var(--letter-alpha, 1);
+    transform: translateY(var(--letter-y, 0em)) rotateX(var(--letter-tilt, 0deg));
+    filter: blur(var(--letter-blur, 0px));
+    transform-origin: 50% 90%;
+  }
+  .enhanced .story-word {
+    perspective: 450px;
+  }
+  .enhanced .scene-text em,
+  .enhanced .scene-text p,
+  .enhanced .scene-text .scene-link {
+    opacity: var(--copy, 1);
+  }
+  .enhanced .story-orb {
+    opacity: var(--orb-alpha, 1);
+    transform: translateY(var(--orb-rise, 0em)) scale(var(--orb-scale, 1));
+  }
+  .story-orb .g-loop,
+  .story-orb .g-ring {
+    transform-origin: 60px 60px;
+  }
+  .scroll-scene.active .story-orb svg {
+    animation: batonOrbBob 5s ease-in-out infinite;
+  }
+  .scroll-scene.active .g-loop {
+    animation: batonOrbSpin 7s linear infinite;
+  }
+  .scroll-scene.active .g-ring {
+    animation: batonOrbSpin 5s linear infinite;
+  }
+  .scroll-scene.active .g-ho-a {
+    animation: batonArrowSlide 1.8s ease-in-out infinite alternate;
+  }
+  .scroll-scene.active .g-ho-b {
+    --arrow-shift: -5px;
+    animation: batonArrowSlide 1.8s ease-in-out infinite alternate;
+  }
+  .scroll-scene.active .g-check {
+    animation: batonCheckDraw 0.65s cubic-bezier(0.6, 0, 0.2, 1) 0.2s both;
+  }
+}
+@keyframes batonOrbBob {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-2deg);
+  }
+  50% {
+    transform: translateY(-4%) rotate(2deg);
+  }
+}
+@keyframes batonOrbSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes batonArrowSlide {
+  to {
+    transform: translateX(var(--arrow-shift, 5px));
+  }
+}
+@keyframes batonCheckDraw {
+  from {
+    stroke-dasharray: 60;
+    stroke-dashoffset: 60;
+  }
+  to {
+    stroke-dasharray: 60;
+    stroke-dashoffset: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .baton-ribbon-sweep {
+    display: none;
+  }
+}
+@media (max-width: 690px) {
+  .scroll-scene {
+    align-items: flex-end;
+    padding: 30px 7vw 57px;
+  }
+  .scroll-scene img {
+    object-position: 50% 30%;
+  }
+  .scroll-scene figure::after {
+    background: linear-gradient(0deg, #fff 0%, #fff 12%, #fffffff4 33%, #ffffff14 74%);
+  }
+  .scene-text h1,
+  .scene-text h2 {
+    font-size: clamp(33px, 9vw, 58px);
+  }
+  .scene-text p {
+    margin: 12px 0;
+  }
+}
+@media (max-height: 620px) and (max-width: 690px) {
+  .scene-text p {
+    font-size: 12px;
+    margin: 7px 0;
+  }
+}
