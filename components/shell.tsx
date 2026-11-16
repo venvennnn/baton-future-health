@@ -4,6 +4,7 @@ import { kpis } from "@/lib/analytics";
 import { FACILITIES } from "@/lib/facilities";
 import { useDemo } from "@/components/providers";
 import { useWalkthrough } from "@/components/walkthrough";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -61,9 +62,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
           <div className="flex h-16 items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <Link href="/" className="flex items-center gap-2">
-                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-700 text-white shadow-md">
-                  <span className="material-symbols-outlined text-[20px]">sync_alt</span>
-                </span>
+                <Image src="/brand/baton-mark.png" alt="" width={270} height={270} priority unoptimized className="h-11 w-11 shrink-0" />
                 <span className="leading-none">
                   <span className="block text-xl font-black tracking-tight">Baton</span>
                   <span className="mt-0.5 block text-[10px] font-semibold uppercase tracking-widest text-blue-700">Intelligence</span>
