@@ -40,14 +40,14 @@ export function Bottlenecks() {
   );
 
   return (
-    <main className="mx-auto flex w-full max-w-7xl flex-col gap-5 px-4 py-8 sm:px-6 lg:px-8">
+    <main className="page-rise mx-auto flex w-full max-w-7xl flex-col gap-5 px-4 py-8 sm:px-6 lg:px-8">
       <div>
         <p className="text-[11px] font-bold uppercase tracking-wider text-blue-800">Network view · from this case file</p>
         <h1 className="text-3xl font-extrabold tracking-tight text-slate-950">Facilities and network bottlenecks</h1>
         <p className="mt-1 text-sm text-slate-700">Open-case age by stage. These are not live hospital waits.</p>
         <div className="mt-3"><ClinicFilter /></div>
       </div>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="stagger grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-card"><p className="text-[11px] font-bold uppercase tracking-wider text-slate-700">Endoscopy facilities</p><p className="mt-2 text-3xl font-extrabold">{ENDOSCOPY_FACILITIES.length}</p><p className="mt-1 text-xs text-slate-700">Shared with the case file</p></article>
         <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-card"><p className="text-[11px] font-bold uppercase tracking-wider text-slate-700">Longest open booking</p><p className="mt-2 text-3xl font-extrabold">{saturated?.median === null || saturated?.median === undefined ? "—" : formatDays(saturated.median).replace(" days", "d").replace(" day", "d")}</p><p className="mt-1 text-xs text-slate-700">{saturated ? saturated.facility.short : "No open booking queue"}</p></article>
         <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-card"><p className="text-[11px] font-bold uppercase tracking-wider text-slate-700">Open cases</p><p className="mt-2 text-3xl font-extrabold">{scoped.filter((item) => !item.closed).length}</p><p className="mt-1 text-xs text-slate-700">{programme.attendedWithoutClosure} attended and still open</p></article>
@@ -83,7 +83,7 @@ export function Bottlenecks() {
                   return (
                     <div key={item}>
                       <div className="h-2 overflow-hidden rounded-full bg-slate-100">
-                        <div className={`${tone} h-full rounded-full`} style={{ width: `${width}%` }} />
+                        <div className={`bar-grow ${tone} h-full rounded-full`} style={{ width: `${width}%` }} />
                       </div>
                       <div className="mt-1 text-[11px] font-semibold text-slate-600">{median === null || median === undefined ? "No open cases" : formatDays(median)}</div>
                     </div>

@@ -79,7 +79,7 @@ export function SimulatorView() {
   const completeDelta = navigation.completed / navigation.n - baseline.completed / baseline.n;
 
   return (
-    <main className="mx-auto flex w-full max-w-7xl flex-col gap-5 px-4 py-8 sm:px-6 lg:px-8">
+    <main className="page-rise mx-auto flex w-full max-w-7xl flex-col gap-5 px-4 py-8 sm:px-6 lg:px-8">
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
         <div className="max-w-2xl">
           <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-blue-800">Seeded model · n={cohort.length.toLocaleString()}</span>
@@ -94,7 +94,7 @@ export function SimulatorView() {
       </div>
       {replicates ? <p className="rounded-xl bg-slate-50 p-3 text-sm">{replicates}</p> : null}
 
-      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <section className="stagger grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Metric label="Kaplan–Meier colonoscopy by day 180" value={pct(navigation.km.atHorizon)} delta={signed((navigation.km.atHorizon ?? 0) - (baseline.km.atHorizon ?? 0))} note={`Baseline ${pct(baseline.km.atHorizon)} · estimator: Kaplan–Meier`} />
         <Metric label="KM median wait" value={navigation.km.medianDay === null ? "Not reached" : `${navigation.km.medianDay}d`} delta={navigation.km.medianDay === null ? "Incidence stays under 50%" : `Baseline ${baseline.km.medianDay ?? "not reached"}`} note={navigation.observedWaits.median === null ? "No completions" : `Among completions only: ${navigation.observedWaits.median.toFixed(0)}d (n=${navigation.observedWaits.n})`} />
         <Metric label="KM 90th percentile" value={navigation.km.p90Day === null ? "Not reached" : `${navigation.km.p90Day}d`} delta={navigation.observedWaits.p90 === null ? "Completed-only p90 unavailable" : `Completed-only p90 ${navigation.observedWaits.p90.toFixed(0)}d`} note="Patients whose follow-up ends first are censored" />

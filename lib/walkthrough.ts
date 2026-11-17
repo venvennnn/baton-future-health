@@ -44,8 +44,8 @@ const COPY: Record<"en" | "ar", Record<TourStepId, StepCopy>> = {
       body: "The amber bar applies to every page. Actions stay in this browser. Nothing is sent to a hospital, Malaffi, or the Department of Health.",
     },
     nav: {
-      title: "Six places, one case file",
-      body: "Overview, the case board, Fatima’s record, facility waits, the policy simulator, and the governance notes all read the same synthetic cases.",
+      title: "Five places, one case file",
+      body: "Overview, the case board, facility waits, the policy simulator, and the governance notes read the same synthetic cases. A case record opens from the board.",
     },
     hero: {
       title: "Follow up, hand over, close the loop",
@@ -122,8 +122,8 @@ const COPY: Record<"en" | "ar", Record<TourStepId, StepCopy>> = {
       body: "الشريط الكهرماني يسري على كل الصفحات. الإجراءات تبقى في هذا المتصفح، ولا يُرسل شيء إلى مستشفى أو ملفّي أو دائرة الصحة.",
     },
     nav: {
-      title: "ستة مواضع وملف حالات واحد",
-      body: "النظرة العامة ولوحة الحالات وسجل فاطمة وانتظار المنشآت ومحاكي السياسة وملاحظات الحوكمة تقرأ الحالات المصطنعة نفسها.",
+      title: "خمسة مواضع وملف حالات واحد",
+      body: "النظرة العامة ولوحة الحالات وانتظار المنشآت ومحاكي السياسة وملاحظات الحوكمة تقرأ الحالات المصطنعة نفسها. سجل الحالة يُفتح من اللوحة.",
     },
     hero: {
       title: "تابع، سلّم، وأغلق المسار",

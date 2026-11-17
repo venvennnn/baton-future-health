@@ -24,7 +24,7 @@ export function CaseRecord({ caseId }: { caseId: string }) {
   const remaining = BOOKING_SLA_DAYS - days;
 
   return (
-    <main className="mx-auto max-w-7xl space-y-5 px-4 py-8 sm:px-6 lg:px-8">
+    <main className="page-rise mx-auto max-w-7xl space-y-5 px-4 py-8 sm:px-6 lg:px-8">
       <div className="flex flex-col justify-between gap-2 text-xs text-slate-700 sm:flex-row sm:items-center">
         <div className="flex flex-wrap items-center gap-1.5">
           <Link href="/cases" className="hover:text-blue-800 hover:underline">Case Board</Link>
@@ -80,8 +80,8 @@ export function CaseRecord({ caseId }: { caseId: string }) {
           <p className="text-xs text-slate-700">Attendance does not close the case. Closure needs the report and a disposition.</p>
         </div>
         <div data-tour="record-milestones" className="relative min-w-[840px] py-2">
-          <div className="absolute left-12 right-12 top-[34px] h-0.5 bg-slate-200" />
-          <div className="relative grid grid-cols-5 gap-4">
+          <div className="pathway-line absolute left-12 right-12 top-[34px] h-0.5 bg-slate-200" />
+          <div className="pathway-steps relative grid grid-cols-5 gap-4">
             <Step done title="Positive FIT result" when={formatDay(item.resultOn)} detail="Result on file" />
             <Step done={item.outreach.length > 0} title="Patient outreach" when={item.outreach.length ? `${item.outreach.length} logged` : "None yet"} detail="Log only" />
             <Step alert={item.handoverStatus === "rejected_capacity" || item.handoverStatus === "reverted"} done={item.handoverStatus === "accepted" || item.handoverStatus === "booked" || item.procedureAttended} title="GI referral" when={returned ? "Returned" : "Open"} detail={returned ? returned.short : "No return on file"} />

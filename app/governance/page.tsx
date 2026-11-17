@@ -19,7 +19,7 @@ export default function GovernancePage() {
   };
 
   return (
-    <main className="mx-auto flex max-w-3xl flex-col gap-6 px-4 py-8 sm:px-6">
+    <main className="page-rise mx-auto flex max-w-3xl flex-col gap-6 px-4 py-8 sm:px-6">
       <h1 className="text-3xl font-black tracking-tight">FHIR-shaped notes and governance</h1>
       <p className="text-slate-600">This page shows how a case event could be shaped. It is not connected to Malaffi, a hospital FHIR server, or a Department of Health registry.</p>
       <section id="safety" data-tour="governance-safety" className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm">

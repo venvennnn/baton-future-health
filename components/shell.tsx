@@ -12,7 +12,6 @@ const COPY = {
     banner: "Synthetic demo. Actions stay in this browser. Nothing is sent to a hospital, Malaffi, or the Department of Health.",
     overview: "Overview",
     board: "Case Board",
-    record: "Case FIT-26771",
     facilities: "Facilities",
     simulator: "Policy Simulator",
     governance: "Governance",
@@ -26,7 +25,6 @@ const COPY = {
     banner: "عرض تجريبي ببيانات مصطنعة. الإجراءات تبقى في هذا المتصفح ولا تُرسل إلى أي نظام سريري.",
     overview: "نظرة عامة",
     board: "لوحة الحالات",
-    record: "الحالة FIT-26771",
     facilities: "المنشآت",
     simulator: "محاكي السياسة",
     governance: "الحوكمة",
@@ -47,7 +45,6 @@ export function Shell({ children }: { children: React.ReactNode }) {
   const links = [
     { href: "/", label: text.overview, icon: "hub" },
     { href: "/cases", label: text.board, icon: "bar_chart", badge: overdue },
-    { href: "/cases/FIT-26771", label: text.record, icon: "assignment" },
     { href: "/facilities", label: text.facilities, icon: "clinical_notes" },
     { href: "/simulator", label: text.simulator, icon: "science" },
     { href: "/governance", label: text.governance, icon: "layers" },
@@ -67,10 +64,8 @@ export function Shell({ children }: { children: React.ReactNode }) {
               const on = link.href === "/"
                 ? pathname === "/"
                 : link.href === "/cases"
-                  ? pathname === "/cases"
-                  : link.href === "/cases/FIT-26771"
-                    ? pathname.startsWith("/cases/")
-                    : pathname === link.href;
+                  ? pathname.startsWith("/cases")
+                  : pathname === link.href;
               return (
                 <Link
                   key={link.href}
