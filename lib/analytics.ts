@@ -1,3 +1,4 @@
+import { effectiveWaitDays } from "./coordination";
 import { daysBetween } from "./dates";
 import { ENDOSCOPY_FACILITIES, FACILITY_BY_ID } from "./facilities";
 import {
@@ -235,8 +236,11 @@ export interface DestinationOption {
   rejected: boolean;
   femaleTeam: boolean;
   km: number;
+  dailySlots: number;
   openMedian: number | null;
   openN: number;
+  /** Open booking age plus queue depth divided by daily slots. Zero when nothing is waiting. */
+  effectiveWait: number | null;
 }
 
 export function destinationOptions(item: ScreeningCase, cases: ScreeningCase[]): DestinationOption[] {
@@ -252,6 +256,8 @@ export function destinationOptions(item: ScreeningCase, cases: ScreeningCase[]):
         }
       }
       const rejected = item.events.some((event) => event.kind === "rejection" && event.facilityId === facilityId);
+      const open = waitStat(ages);
+      const dailySlots = facility?.dailySlots ?? 0;
       return {
         facilityId,
         name: facility?.name ?? facilityId,
@@ -259,16 +265,18 @@ export function destinationOptions(item: ScreeningCase, cases: ScreeningCase[]):
         rejected,
         femaleTeam: Boolean(facility?.femaleTeam),
         km: facility?.kmFromCentre ?? 0,
-        openMedian: waitStat(ages).median,
+        dailySlots,
+        openMedian: open.median,
         openN: ages.length,
+        effectiveWait: effectiveWaitDays(open.median, ages.length, dailySlots),
       };
     })
     .sort((a, b) => {
       if (a.rejected !== b.rejected) return a.rejected ? 1 : -1;
-      const aWait = a.openMedian ?? 999;
-      const bWait = b.openMedian ?? 999;
-      if (aWait !== bWait) return aWait - bWait;
       if (item.femaleTeamRequested && a.femaleTeam !== b.femaleTeam) return a.femaleTeam ? -1 : 1;
+      const aWait = a.effectiveWait ?? 999;
+      const bWait = b.effectiveWait ?? 999;
+      if (aWait !== bWait) return aWait - bWait;
       return a.km - b.km;
     });
 }

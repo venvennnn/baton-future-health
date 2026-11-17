@@ -2,6 +2,7 @@
 
 import { useDemo } from "@/components/providers";
 import { bottleneckTable, delaySummary, programmeCounts, worklist } from "@/lib/analytics";
+import { rebalanceProjection } from "@/lib/coordination";
 import { formatDays } from "@/lib/dates";
 import { ENDOSCOPY_FACILITIES, facilityShort } from "@/lib/facilities";
 import { DELAY_LABEL, SPAN_LABEL, type SpanStage } from "@/lib/types";
@@ -22,6 +23,20 @@ export function Bottlenecks() {
   const delays = useMemo(() => delaySummary(scoped), [scoped]);
   const rows = worklist(scoped, facilityId, stage);
   const programme = programmeCounts(scoped);
+  const [quota, setQuota] = useState(20);
+  const bookingRows = ENDOSCOPY_FACILITIES.map((facility) => {
+    const cell = cells.find((row) => row.facilityId === facility.id && row.stage === "booking");
+    return { facility, median: cell?.open.median ?? null, n: cell?.open.n ?? 0 };
+  }).filter((row) => row.median !== null && row.n > 0);
+  const saturated = [...bookingRows].sort((a, b) => (b.median ?? 0) - (a.median ?? 0))[0];
+  const quieter = [...bookingRows].filter((row) => row.facility.id !== saturated?.facility.id).sort((a, b) => (a.median ?? 0) - (b.median ?? 0))[0];
+  const projection = saturated && quieter && saturated.median !== null && quieter.median !== null
+    ? rebalanceProjection(saturated.median, quieter.median, quota)
+    : null;
+  const radarMax = Math.max(
+    1,
+    ...cells.map((cell) => cell.open.median ?? 0),
+  );
 
   return (
     <main className="mx-auto flex w-full max-w-[1400px] flex-col gap-8 px-4 py-8 sm:px-6">
@@ -32,6 +47,48 @@ export function Bottlenecks() {
         </div>
         <span className="h-fit rounded-md border border-blue-100 bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700">Synthetic demo</span>
       </div>
+
+      <section data-tour="facility-radar" className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h2 className="font-bold">Facility bottleneck radar</h2>
+        <p className="mt-1 text-sm text-slate-500">Open-case age at three stages: referral intake, booking, and report review. The length is the median in this file. It shows where a facility is slow, and it is not a live hospital feed.</p>
+        <div className="mt-4 flex flex-wrap gap-3 text-xs font-bold">
+          <span className="rounded-full bg-blue-100 px-2 py-1 text-blue-900">Referral intake</span>
+          <span className="rounded-full bg-amber-100 px-2 py-1 text-amber-950">Booking</span>
+          <span className="rounded-full bg-violet-100 px-2 py-1 text-violet-950">Report review</span>
+        </div>
+        <div className="mt-4 hidden grid-cols-[9rem_1fr] gap-3 text-[11px] font-bold uppercase text-slate-500 sm:grid">
+          <span />
+          <div className="grid grid-cols-3 gap-3">
+            <span>Referral intake</span>
+            <span>Booking</span>
+            <span>Report review</span>
+          </div>
+        </div>
+        <div className="mt-4 flex flex-col gap-4">
+          {ENDOSCOPY_FACILITIES.map((facility) => (
+            <div key={facility.id} className="grid items-center gap-3 sm:grid-cols-[9rem_1fr]">
+              <div className="text-sm font-bold">{facility.short}</div>
+              <div className="grid grid-cols-3 gap-3">
+                {STAGES.map((item) => {
+                  const cell = cells.find((row) => row.facilityId === facility.id && row.stage === item);
+                  const median = cell?.open.median;
+                  const width = median === null || median === undefined ? 0 : (median / radarMax) * 100;
+                  const tone = item === "referral_acceptance" ? "bg-blue-500" : item === "booking" ? "bg-amber-500" : "bg-violet-500";
+                  return (
+                    <div key={item}>
+                      <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+                        <div className={`${tone} h-full rounded-full`} style={{ width: `${width}%` }} />
+                      </div>
+                      <div className="mt-1 text-[11px] font-semibold text-slate-600">{median === null || median === undefined ? "No open cases" : formatDays(median)}</div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+        <p className="mt-3 text-xs text-slate-500">Bars are scaled to the longest open median on this page ({formatDays(radarMax)}). “No open cases” means that stage has nothing waiting in the file.</p>
+      </section>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <section data-tour="facility-table" className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -97,6 +154,34 @@ export function Bottlenecks() {
           </p>
         </section>
       </div>
+
+      {projection && saturated && quieter ? (
+        <section data-tour="facility-rebalance" className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h2 className="font-bold">Traffic rebalancing</h2>
+          <p className="mt-1 max-w-3xl text-sm text-slate-500">
+            Divert a share of routine patients from {saturated.facility.name}, the longest open booking age in this file, toward {quieter.facility.name}. The figures below are a projection in this browser. No patient is moved.
+          </p>
+          <label className="mt-4 block">
+            <span className="flex justify-between text-sm font-semibold">
+              <span>Routine quota to divert</span>
+              <span className="text-blue-800">{quota}%</span>
+            </span>
+            <input className="mt-2 w-full accent-blue-700" type="range" min={10} max={60} step={5} value={quota} onChange={(event) => setQuota(Number(event.target.value))} aria-label="Routine quota to divert" />
+          </label>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <article className="rounded-xl bg-amber-50 p-4">
+              <div className="text-xs font-bold uppercase text-amber-900">{saturated.facility.short} · projected booking age</div>
+              <div className="mt-1 text-3xl font-black">{formatDays(projection.origin)}</div>
+              <p className="text-xs text-slate-600">File median now {formatDays(saturated.median ?? 0)} · open n={saturated.n}</p>
+            </article>
+            <article className="rounded-xl bg-blue-50 p-4">
+              <div className="text-xs font-bold uppercase text-blue-900">{quieter.facility.short} · projected booking age</div>
+              <div className="mt-1 text-3xl font-black">{formatDays(projection.target)}</div>
+              <p className="text-xs text-slate-600">File median now {formatDays(quieter.median ?? 0)} · open n={quieter.n}</p>
+            </article>
+          </div>
+        </section>
+      ) : null}
 
       <section data-tour="facility-worklist" className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">

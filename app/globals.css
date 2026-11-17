@@ -20,6 +20,10 @@ body {
   user-select: none;
 }
 
+.lock-stripe {
+  background-image: repeating-linear-gradient(-45deg, transparent, transparent 8px, rgba(15, 23, 42, 0.045) 8px, rgba(15, 23, 42, 0.045) 16px);
+}
+
 .tour-offer {
   animation: tour-card-in 0.35s ease;
 }

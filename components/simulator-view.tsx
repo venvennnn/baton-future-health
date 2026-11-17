@@ -1,5 +1,6 @@
 "use client";
 
+import { EquityPareto } from "@/components/coordination";
 import { facilityName, facilityShort } from "@/lib/facilities";
 import {
   BASELINE_POLICY,
@@ -192,6 +193,8 @@ export function SimulatorView() {
           <p className="mt-2 text-xs text-slate-500">The worked example uses the shared case ids inside the seeded cohort. Aggregate rates use all {cohort.length.toLocaleString()} patients, not only these four.</p>
         </div>
       </section>
+
+      <EquityPareto />
 
       <Sensitivity resources={resources} />
     </main>
