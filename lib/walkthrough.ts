@@ -49,11 +49,11 @@ const COPY: Record<"en" | "ar", Record<TourStepId, StepCopy>> = {
     },
     hero: {
       title: "Follow up, hand over, close the loop",
-      body: "The opening story is the pathway. Scroll moves from follow-up, to who owns the handover, to keeping the case open until the outcome is recorded.",
+      body: "The opening window is the pathway. A positive result, outreach, and a returned referral stay on one case until the report and a disposition are recorded.",
     },
     flows: {
-      title: "Where follow-up stalls",
-      body: "These ribbons are a teaching picture, and the thickness follows that example. The programme counts further down come from the case file. Attendance and documented closure are counted separately.",
+      title: "Four milestones",
+      body: "Detection, outreach, colonoscopy, and closure. The last step stays locked until a biopsy file and a disposition are chosen. Attendance and documented closure are counted separately.",
     },
     kpis: {
       title: "The daily worklist",
@@ -127,11 +127,11 @@ const COPY: Record<"en" | "ar", Record<TourStepId, StepCopy>> = {
     },
     hero: {
       title: "تابع، سلّم، وأغلق المسار",
-      body: "القصة الافتتاحية هي المسار. التمرير ينتقل من المتابعة، إلى من يملك التسليم، إلى إبقاء الحالة مفتوحة حتى يُسجَّل ما حدث.",
+      body: "النافذة الافتتاحية هي المسار. نتيجة إيجابية وتواصل وإحالة معادة تبقى في حالة واحدة حتى يُسجَّل التقرير والقرار.",
     },
     flows: {
-      title: "أين تتعثر المتابعة",
-      body: "هذه الأشرطة صورة تعليمية، وسمكها يتبع ذلك المثال. أعداد البرنامج أسفل الصفحة مأخوذة من ملف الحالات. حضور الإجراء وإغلاق الملف يُحسبان بشكل منفصل.",
+      title: "أربع محطات",
+      body: "الاكتشاف والتواصل والتنظير والإغلاق. تبقى الخطوة الأخيرة مقفلة حتى يُختار ملف الخزعة والقرار. حضور الإجراء وإغلاق الملف يُحسبان بشكل منفصل.",
     },
     kpis: {
       title: "قائمة العمل اليومية",
