@@ -22,10 +22,16 @@ const META = [
   { id: "queue", href: "/cases", target: "board-queue", align: "content" },
   { id: "inspector", href: "/cases", target: "board-inspector", align: "content" },
   { id: "milestones", href: "/cases/FIT-26771", target: "record-milestones", align: "content" },
+  { id: "readiness", href: "/cases/FIT-26771", target: "record-readiness", align: "content" },
+  { id: "consult", href: "/cases/FIT-26771", target: "record-sbar", align: "content" },
+  { id: "lock", href: "/cases/FIT-26771", target: "record-lock", align: "content" },
   { id: "routing", href: "/cases/FIT-26771", target: "record-routing", align: "content" },
+  { id: "radar", href: "/facilities", target: "facility-radar", align: "content" },
   { id: "facility", href: "/facilities", target: "facility-table", align: "content" },
   { id: "worklist", href: "/facilities", target: "facility-worklist", align: "content" },
+  { id: "rebalance", href: "/facilities", target: "facility-rebalance", align: "content" },
   { id: "simulator", href: "/simulator", target: "sim-controls", align: "content" },
+  { id: "pareto", href: "/simulator", target: "sim-pareto", align: "content" },
   { id: "governance", href: "/governance", target: "governance-safety", align: "content" },
 ] as const;
 
@@ -65,9 +71,25 @@ const COPY: Record<"en" | "ar", Record<TourStepId, StepCopy>> = {
       title: "Attending does not close the case",
       body: "FIT-26771 follows one person from the positive test to the written report.\n\nThey can attend the colonoscopy, and the case can still be open.\n\nIt closes only when two things are on file: the report, and what the care team decided.",
     },
+    readiness: {
+      title: "Clear the checklist first",
+      body: "eGFR, the blood-thinner hold, and sedation risk have to be ticked before a simulated handover can be recorded.\n\nTwo are already ticked on this case. The handover buttons stay off until the third is ticked.\n\nThe checklist lives in this browser. It does not send a referral.",
+    },
+    consult: {
+      title: "Ask the specialist here",
+      body: "The thread is a local note between the primary doctor and a GI reply about cardiac risk.\n\nA saved reply stays on this page. It is not delivered, and the referral is not bounced.",
+    },
+    lock: {
+      title: "Closure stays locked",
+      body: "Choose a biopsy file and a disposition: Oncology MDT, or a 3-year recall.\n\nThe button stays off until both are set. On this case it also stays off because the colonoscopy has not been attended.\n\nA later save writes a local note. It does not close the shared file.",
+    },
     routing: {
-      title: "Destinations come from the case file",
-      body: "Options are ranked from this file, including a facility that already returned the case. Recording a handover does not send a referral.",
+      title: "Effective wait, and a female team",
+      body: "Fatima asked for a female specialist. Clinics with a female endoscopist are listed first.\n\nEffective wait uses the open booking age plus the queue depth divided by daily slots. The suggestion is calculated from this file, not a live queue.\n\nRecording a handover does not send a referral.",
+    },
+    radar: {
+      title: "Where the wait sits",
+      body: "Each facility has three open-case ages: referral intake, booking, and report review.\n\nThe longer bar is the slower stage in this file. A slow facility is not the same as a confirmed capacity blocker.",
     },
     facility: {
       title: "Waits, with a denominator",
@@ -77,9 +99,17 @@ const COPY: Record<"en" | "ar", Record<TourStepId, StepCopy>> = {
       title: "The cases behind a cell",
       body: "This list is the open cases for the facility and stage you select, longest current wait first. Review opens that case record.",
     },
+    rebalance: {
+      title: "Try a quieter clinic",
+      body: "The slider diverts a share of routine patients from the longest open booking queue toward a shorter one.\n\nThe two ages update as a projection. No patient is moved.",
+    },
     simulator: {
       title: "A model, not a verification",
       body: "Calls, outreach order, slots, and teach-back change the Kaplan–Meier figures for this seeded cohort. The result is model output, not a Department of Health figure.",
+    },
+    pareto: {
+      title: "Gap down, completions up",
+      body: "Move interpreter priority along the teaching curve.\n\nThe language gap runs from 31.4% to 2.1%, and the illustrated completion count rises at the same time.\n\nThis curve is separate from the seeded model above. It is not a Department of Health result.",
     },
     governance: {
       title: "What the demo does not do",
@@ -119,9 +149,25 @@ const COPY: Record<"en" | "ar", Record<TourStepId, StepCopy>> = {
       title: "الحضور لا يغلق الحالة",
       body: "يتبع FIT-26771 شخصًا واحدًا من الفحص الإيجابي إلى التقرير المكتوب.\n\nيمكنه حضور التنظير وتبقى الحالة مفتوحة.\n\nتُغلق فقط عندما يُحفظ شيئان: التقرير، وما قرره فريق الرعاية.",
     },
+    readiness: {
+      title: "أكمل القائمة أولًا",
+      body: "يجب تعليم وظائف الكلى وخطة إيقاف مميع الدم وخطر التخدير قبل تسجيل تسليم محاكى.\n\nاثنان معلَّمان في هذه الحالة. تبقى أزرار التسليم متوقفة حتى يُعلَّم الثالث.\n\nالقائمة في هذا المتصفح، ولا ترسل إحالة.",
+    },
+    consult: {
+      title: "اسأل الاختصاصي هنا",
+      body: "هذا خيط محلي بين طبيب الأسرة ورد اختصاصي الجهاز الهضمي عن الخطر القلبي.\n\nالرد المحفوظ يبقى في الصفحة. لا يُسلَّم، ولا تُعاد الإحالة.",
+    },
+    lock: {
+      title: "الإغلاق يبقى مقفلًا",
+      body: "اختر ملف الخزعة وقرارًا: اجتماع الأورام، أو إعادة الفحص بعد 3 سنوات.\n\nيبقى الزر متوقفًا حتى يُختار الاثنان. وفي هذه الحالة يبقى متوقفًا أيضًا لأن التنظير لم يُحضر.\n\nالحفظ لاحقًا يكتب ملاحظة محلية، ولا يغلق الملف المشترك.",
+    },
     routing: {
-      title: "الوجهات من ملف الحالات",
-      body: "تُرتَّب الخيارات من هذا الملف، بما فيها منشأة أعادت الحالة من قبل. تسجيل التسليم لا يرسل إحالة.",
+      title: "الانتظار الفعّال وفريق نسائي",
+      body: "طلبت فاطمة اختصاصية. العيادات التي لديها منظار نسائي تُعرض أولًا.\n\nالانتظار الفعّال يجمع عمر الحجز المفتوح مع عمق الطابور مقسومًا على المواعيد اليومية. الاقتراح محسوب من هذا الملف، وليس طابورًا حيًا.\n\nتسجيل التسليم لا يرسل إحالة.",
+    },
+    radar: {
+      title: "أين يجلس الانتظار",
+      body: "لكل منشأة ثلاثة أعمار للحالات المفتوحة: استقبال الإحالة، والحجز، ومراجعة التقرير.\n\nالشريط الأطول هو المرحلة الأبطأ في هذا الملف. بطء المنشأة ليس بذاته عائق سعة مؤكدًا.",
     },
     facility: {
       title: "الانتظار مع المقام",
@@ -131,9 +177,17 @@ const COPY: Record<"en" | "ar", Record<TourStepId, StepCopy>> = {
       title: "الحالات خلف الخلية",
       body: "هذه القائمة هي الحالات المفتوحة للمنشأة والمرحلة المختارتين، الأطول انتظارًا أولًا. مراجعة تفتح سجل الحالة.",
     },
+    rebalance: {
+      title: "جرّب عيادة أهدأ",
+      body: "يحوّل المؤشر حصة من المرضى الروتينيين من أطول طابور حجز مفتوح إلى طابور أقصر.\n\nيتحدّث الرقمان كتوقع. لا يُنقل أي مريض.",
+    },
     simulator: {
       title: "نموذج وليس تحققًا",
       body: "المكالمات وترتيب التواصل والمواعيد والتعليم الراجع تغيّر أرقام كابلان–ماير لهذه المجموعة المبذورة. الناتج مخرجات نموذج، وليس رقمًا لدائرة الصحة.",
+    },
+    pareto: {
+      title: "الفجوة تنخفض والإكمال يرتفع",
+      body: "حرّك أولوية المترجم على منحنى تعليمي.\n\nتنتقل فجوة اللغة من 31.4% إلى 2.1%، ويرتفع عدد الإكمال المرسوم في الوقت نفسه.\n\nهذا المنحنى منفصل عن النموذج المبذور أعلاه، وليس نتيجة لدائرة الصحة.",
     },
     governance: {
       title: "ما لا يفعله هذا العرض",

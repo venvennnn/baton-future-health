@@ -1,5 +1,6 @@
 "use client";
 
+import { PathologyLock, ReadinessGate, SbarThread } from "@/components/coordination";
 import { useDemo } from "@/components/providers";
 import { daysSinceResult, destinationOptions, isOverdue, overdueBy } from "@/lib/analytics";
 import { formatDay, formatDays } from "@/lib/dates";
@@ -13,6 +14,7 @@ export function CaseRecord({ caseId }: { caseId: string }) {
   const item = cases.find((row) => row.id === caseId);
   const [note, setNote] = useState("");
   const [notice, setNotice] = useState<string | null>(null);
+  const [ready, setReady] = useState(false);
   if (!item) return null;
   const options = destinationOptions(item, cases);
   const days = daysSinceResult(item);
@@ -66,7 +68,14 @@ export function CaseRecord({ caseId }: { caseId: string }) {
               <div>
                 <h1 className="text-2xl font-extrabold">{item.name} {item.nameAr ? <span className="font-medium text-slate-500">{item.nameAr}</span> : null}</h1>
                 <p className="text-sm text-slate-500">{item.age} years · {item.sex === "F" ? "Female" : "Male"} · EID {item.emiratesId}</p>
-                <p className="mt-2 text-sm"><span className="rounded-full bg-slate-100 px-2 py-0.5">{facilityName(item.originFacilityId)}</span> <span className="ml-2 text-slate-500">Synthetic record</span></p>
+                <p className="mt-2 flex flex-wrap items-center gap-2 text-sm">
+                  <span className="rounded-full bg-slate-100 px-2 py-0.5">{facilityName(item.originFacilityId)}</span>
+                  {item.femaleTeamRequested ? (
+                    <span className="rounded-full bg-violet-100 px-2 py-0.5 text-xs font-bold text-violet-950">Female specialist requested</span>
+                  ) : (
+                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-bold text-slate-600">No specialist-gender request</span>
+                  )}
+                </p>
               </div>
             </div>
             <div className="mt-4 grid grid-cols-2 gap-2">
@@ -104,10 +113,21 @@ export function CaseRecord({ caseId }: { caseId: string }) {
             <Milestone step="02" title="Patient outreach" done={item.outreach.length > 0 || item.stage !== "result_issued"} body={item.outreach.length ? `${item.outreach.length} logged touch${item.outreach.length === 1 ? "" : "es"}` : "No outreach logged"} chip={item.stage === "teach_back" ? "Teach-back open" : "See log"} />
             <Milestone step="03" title="Specialist referral" done={item.handoverStatus !== "not_sent"} alert={item.handoverStatus === "rejected_capacity" || item.handoverStatus === "reverted"} body={HANDOVER_LABEL[item.handoverStatus]} chip={item.endoscopyFacilityId ? facilityName(item.endoscopyFacilityId) : "No destination"} />
             <Milestone step="04" title="Colonoscopy slot" done={item.handoverStatus === "booked" || item.procedureAttended} body={item.procedureAttended ? "Procedure attended" : item.handoverStatus === "booked" ? "Slot recorded, not yet attended" : "No slot recorded"} chip="Attendance is separate from closure" />
-            <Milestone step="05" title="Report and closure" done={item.closed} body={item.closurePendingReason ?? "Report and disposition are both present."} chip={item.closed ? "Documented closure" : "Closure pending"} />
+            <Milestone step="05" title="Report and closure" done={item.closed} body={item.closurePendingReason ?? "Report and disposition are both present."} chip={item.closed ? "Documented closure" : "Locked until biopsy and disposition"} />
           </div>
         </div>
       </section>
+
+      <div className="grid items-start gap-6 lg:grid-cols-3">
+        <ReadinessGate onReady={setReady} />
+        <SbarThread item={item} />
+        <PathologyLock
+          item={item}
+          onRecord={(detail) => {
+            recordNote(item.id, detail);
+          }}
+        />
+      </div>
 
       <Tasks item={item} />
 
@@ -115,34 +135,46 @@ export function CaseRecord({ caseId }: { caseId: string }) {
         <div className="flex flex-col gap-6 lg:col-span-7">
           <section id="routing" data-tour="record-routing" className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-100">
             <h2 className="text-lg font-bold">Referral options in the case file</h2>
-            <p className="text-sm text-slate-500">Ranked by whether the facility already returned this case, then by the open booking age in the same file. This is not a live waiting-list search.</p>
+            <p className="text-sm text-slate-500">
+              Effective wait adds the open queue depth, divided by daily slots, to the open booking age. {item.femaleTeamRequested ? "A female specialist was requested, so clinics with a female endoscopist are listed first." : "No specialist-gender request is on this profile."} This is calculated from the case file, not a live queue.
+            </p>
+            {!ready ? <p className="mt-3 rounded-xl bg-amber-50 p-3 text-sm text-amber-950">The readiness checklist is still open, so a simulated handover stays disabled.</p> : null}
             <div className="mt-4 flex flex-col gap-3">
-              {options.slice(0, 4).map((option, index) => (
-                <article key={option.facilityId} className="rounded-2xl bg-slate-50 p-4">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div className="font-extrabold">{index + 1}. {option.name}</div>
-                    {option.rejected ? <span className="rounded-full bg-red-600 px-2 py-0.5 text-xs font-bold text-white">Previously returned</span> : <span className="rounded-full bg-white px-2 py-0.5 text-xs font-bold text-slate-600">Eligible in the file</span>}
-                  </div>
-                  <dl className="mt-3 grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
-                    <Mini label="Open booking age" value={option.openMedian === null ? `No open cases (n=${option.openN})` : `${formatDays(option.openMedian)} (n=${option.openN})`} />
-                    <Mini label="Team" value={option.femaleTeam ? "Female team listed" : "Female team not listed"} />
-                    <Mini label="Approx. distance" value={`${option.km} km, illustrative`} />
-                    <Mini label="Eligible-slot constraint" value={option.rejected && item.eligibleSlotConstraint ? "Recorded on the return" : "Not recorded"} />
-                  </dl>
-                  {!option.rejected ? (
-                    <button
-                      type="button"
-                      className="mt-3 rounded-full bg-blue-700 px-4 py-2 text-sm font-bold text-white"
-                      onClick={() => {
-                        recordSimulatedHandover(item.id, option.facilityId);
-                        setNotice(`Simulated handover request recorded for ${option.short}. No referral was sent.`);
-                      }}
-                    >
-                      Record simulated handover to {option.short}
-                    </button>
-                  ) : null}
-                </article>
-              ))}
+              {options.slice(0, 4).map((option, index) => {
+                const suggested = index === 0 && !option.rejected;
+                return (
+                  <article key={option.facilityId} className={`rounded-2xl p-4 ${suggested ? "bg-blue-50 ring-1 ring-blue-200" : "bg-slate-50"}`}>
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="font-extrabold">{index + 1}. {option.name}</div>
+                      <div className="flex flex-wrap gap-1">
+                        {suggested ? <span className="rounded-full bg-blue-700 px-2 py-0.5 text-xs font-bold text-white">Suggested from this file</span> : null}
+                        {option.rejected ? <span className="rounded-full bg-red-600 px-2 py-0.5 text-xs font-bold text-white">Previously returned</span> : null}
+                        {option.femaleTeam ? <span className="rounded-full bg-violet-100 px-2 py-0.5 text-xs font-bold text-violet-950">Female endoscopist available</span> : <span className="rounded-full bg-white px-2 py-0.5 text-xs font-bold text-slate-600">No female endoscopist listed</span>}
+                      </div>
+                    </div>
+                    <dl className="mt-3 grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
+                      <Mini label="Effective wait" value={option.effectiveWait === null ? "Not calculated" : option.openN === 0 ? "Nothing waiting" : formatDays(option.effectiveWait)} />
+                      <Mini label="Open booking age" value={option.openMedian === null ? `No open cases (n=${option.openN})` : `${formatDays(option.openMedian)} (n=${option.openN})`} />
+                      <Mini label="Daily slots in the file" value={String(option.dailySlots)} />
+                      <Mini label="Approx. distance" value={`${option.km} km, illustrative`} />
+                    </dl>
+                    {!option.rejected ? (
+                      <button
+                        type="button"
+                        disabled={!ready}
+                        className={`mt-3 rounded-full px-4 py-2 text-sm font-bold ${ready ? "bg-blue-700 text-white" : "cursor-not-allowed bg-slate-200 text-slate-500"}`}
+                        onClick={() => {
+                          if (!ready) return;
+                          recordSimulatedHandover(item.id, option.facilityId);
+                          setNotice(`Simulated handover request recorded for ${option.short}. No referral was sent.`);
+                        }}
+                      >
+                        Record simulated handover to {option.short}
+                      </button>
+                    ) : null}
+                  </article>
+                );
+              })}
             </div>
             {notice ? <p className="mt-3 rounded-xl bg-amber-50 p-3 text-sm text-amber-950">{notice}</p> : null}
           </section>
