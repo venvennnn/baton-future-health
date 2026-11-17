@@ -10,9 +10,9 @@ export function Overview() {
   const attendedShare = counts.cohort === 0 ? 0 : Math.round((counts.attended / counts.cohort) * 1000) / 10;
 
   return (
-    <div>
+    <div className="page-rise">
       <section className="mx-auto max-w-5xl px-4 pb-12 pt-12 text-center sm:px-6 sm:pt-16 lg:px-8">
-        <div data-tour="hero-story">
+        <div data-tour="hero-story" className="rise">
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-3.5 py-1 text-xs font-medium text-amber-800 sm:text-sm">Screening-to-care coordination</div>
           <h1 className="mb-6 text-4xl font-extrabold leading-[1.12] tracking-tight text-slate-950 sm:text-5xl lg:text-6xl">Every screening result.<br />Followed through to care.</h1>
           <p className="mx-auto mb-8 max-w-2xl text-lg leading-relaxed text-slate-700 sm:text-xl">Coordinate patient outreach, referrals and follow-up in one shared workspace.</p>
@@ -29,28 +29,35 @@ export function Overview() {
             <div className="mx-auto hidden h-3 w-64 rounded-full bg-slate-200/70 sm:block" />
             <div className="w-12" />
           </div>
-          <div className="bg-slate-50/40 p-6 sm:p-10">
-            <div className="grid grid-cols-1 items-center gap-6 md:grid-cols-3 lg:gap-8">
+          <div className="relative bg-slate-50/40 p-6 sm:p-10">
+            <div className="handoff-rail hidden md:block" aria-hidden="true"><span className="handoff-bead" /></div>
+            <div className="relative grid grid-cols-1 items-center gap-6 md:grid-cols-3 lg:gap-8">
               <div className="flex flex-col space-y-4">
-                <WindowStep done title="Result issued" detail={demo ? `FIT positive · ${demo.fitUgG} µg/g` : "FIT positive"} />
-                <WindowStep done title="Patient outreach" detail={demo ? `${demo.outreach.length} logged touches` : "Logged touches"} />
-                <WindowStep done title="Referral" detail="Returned by the receiving team" />
+                <WindowStep delay="0.05s" done title="Result issued" detail={demo ? `FIT positive · ${demo.fitUgG} µg/g` : "FIT positive"} />
+                <WindowStep delay="0.18s" done title="Patient outreach" detail={demo ? `${demo.outreach.length} logged touches` : "Logged touches"} />
+                <WindowStep delay="0.31s" done title="Referral" detail="Returned by the receiving team" />
               </div>
-              <div className="rounded-2xl border-2 border-amber-300 bg-white p-5 shadow-card">
+              <Link href="/cases/FIT-26771" className="case-live block rounded-2xl border-2 border-amber-300 bg-white p-5 shadow-card" style={{ animationDelay: "0.22s, 0.9s" }}>
                 <span className="text-base font-extrabold text-slate-900">FIT-26771</span>
                 <div className="my-3"><span className="inline-block rounded-md border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-800">Referral returned</span></div>
                 <div className="space-y-2 border-t border-slate-100 pt-3 text-xs text-slate-700">
                   <div><strong className="text-slate-900">Owner · </strong>{demo?.ownerName ?? "Primary coordinator"}</div>
                   <div><strong className="text-slate-900">Next step · </strong>Review destinations</div>
                 </div>
-              </div>
+              </Link>
               <div className="flex flex-col space-y-4">
-                <WindowStep title="Receiving team" detail="Eligible slot was not available" mark="!" />
-                <WindowStep title="Documented closure" detail="Locked until pathology is chosen" mark="lock" />
+                <WindowStep delay="0.4s" title="Receiving team" detail="Eligible slot was not available" mark="!" />
+                <WindowStep delay="0.52s" title="Documented closure" detail="Locked until pathology is chosen" mark="lock" />
               </div>
             </div>
           </div>
-          <div className="border-t border-slate-200 bg-slate-50 py-3 text-center text-xs font-medium text-slate-700">Follow up · Hand over · Close the loop</div>
+          <div className="loop-words border-t border-slate-200 bg-slate-50 py-3 text-center text-xs font-medium text-slate-700">
+            <span>Follow up</span>
+            {" · "}
+            <span>Hand over</span>
+            {" · "}
+            <span>Close the loop</span>
+          </div>
         </div>
 
         <div className="mx-auto mt-12 max-w-4xl border-t border-slate-200/70 pt-8">
@@ -70,7 +77,7 @@ export function Overview() {
           <h2 className="mb-3 text-3xl font-extrabold tracking-tight text-slate-950 sm:text-4xl">Closed-loop screening in four clear milestones</h2>
           <p className="text-base text-slate-700">The case stays open from a positive screening result until the report and a disposition are both on file.</p>
         </div>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+        <div className="stagger grid grid-cols-1 gap-4 md:grid-cols-4">
           <Milestone kicker="Milestone 01" title="Positive detection" body="A positive FIT result enters the shared case file and the daily worklist." chip="Result on file" tone="green" />
           <Milestone kicker="Milestone 02" title="Navigator outreach" body="Calls, messages, and teach-back are logged. Logging a touch does not place a call." chip="Outreach log" tone="blue" />
           <Milestone kicker="Milestone 03" title="Direct colonoscopy" body="Destinations are ranked from open booking age, queue depth, and a requested female team." chip="File-based match" tone="blue" />
@@ -83,7 +90,7 @@ export function Overview() {
           <h2 className="mb-3 text-3xl font-extrabold tracking-tight text-slate-950 sm:text-4xl">One workspace for every handover.</h2>
           <p className="text-base text-slate-700 sm:text-lg">See the owner, the blocker and the next action.</p>
         </div>
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-4">
+        <div className="stagger grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-4">
           <Door href="/cases" kicker="Case Board" kickerClass="border-blue-200 bg-blue-50 text-blue-800" title="Know who owns the next step" body="Daily worklist sorted by how long the case has been waiting." />
           <Door href="/cases/FIT-26771" kicker="Case Record" kickerClass="border-amber-200 bg-amber-50 text-amber-800" title="Readiness, SBAR and hard lock" body="Checklist, e-consult, modesty routing and pathology-gated closure." />
           <Door href="/facilities" kicker="Facilities" kickerClass="border-blue-200 bg-blue-50 text-blue-800" title="See where follow-up is waiting" body="Stage latency and a slider to project a quieter queue." />
@@ -96,7 +103,7 @@ export function Overview() {
           <span className="mb-2 inline-block rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">From this synthetic file</span>
           <h2 className="text-3xl font-extrabold tracking-tight text-slate-950">Counts across the demonstration cohort</h2>
         </div>
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="stagger grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
           <Stat value={String(counts.cohort)} label="Cases in the file" note="The worklist, the record, and the facility page read this same file." />
           <Stat value={`${attendedShare}%`} label="Procedure attended" note={`${counts.attended} attended. Attendance is counted separately from closure.`} />
           <Stat value={String(counts.attendedWithoutClosure)} label="Attended, still open" note="A colonoscopy can be attended while closure is still pending." />
@@ -114,10 +121,10 @@ export function Overview() {
   );
 }
 
-function WindowStep({ title, detail, done = false, mark }: { title: string; detail: string; done?: boolean; mark?: "!" | "lock" }) {
+function WindowStep({ title, detail, done = false, mark, delay = "0s" }: { title: string; detail: string; done?: boolean; mark?: "!" | "lock"; delay?: string }) {
   const badge = done ? "bg-emerald-50 text-emerald-700" : mark === "!" ? "bg-amber-50 text-amber-800" : "bg-slate-100 text-slate-700";
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm">
+    <div className="rise flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm" style={{ animationDelay: delay }}>
       <div className={`flex h-9 w-9 items-center justify-center rounded-lg font-bold ${badge}`}>{done ? "✓" : mark === "lock" ? "🔒" : "!"}</div>
       <div>
         <h4 className="text-xs font-bold text-slate-900">{title}</h4>

@@ -37,7 +37,7 @@ export function CaseBoard() {
   const recommended = options.find((option) => !option.rejected) ?? options[0];
 
   return (
-    <main className="mx-auto flex w-full max-w-7xl flex-col gap-5 px-4 py-8 sm:px-6 lg:px-8">
+    <main className="page-rise mx-auto flex w-full max-w-7xl flex-col gap-5 px-4 py-8 sm:px-6 lg:px-8">
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
         <div>
           <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-blue-800">Synthetic case file</span>
@@ -46,7 +46,7 @@ export function CaseBoard() {
         </div>
       </div>
 
-      <section data-tour="board-kpis" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <section data-tour="board-kpis" className="stagger grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Kpi label="Open cases" value={String(metrics.open)} />
         <Kpi label="Inside 14-day target" value={String(Math.max(0, metrics.open - metrics.overdue))} note={metrics.open ? `${Math.round(((metrics.open - metrics.overdue) / metrics.open) * 1000) / 10}% of open` : undefined} />
         <Kpi label="Past 14 days" value={String(metrics.overdue)} alert />
@@ -110,7 +110,7 @@ export function CaseBoard() {
                     <th className="px-5 py-2 text-right font-bold">Action</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="queue-rise divide-y divide-slate-100">
                   {filtered.map((item) => (
                     <tr key={item.id} onClick={() => setSelectedId(item.id)} className={`cursor-pointer ${selected?.id === item.id ? "bg-blue-50/70" : "hover:bg-slate-50"}`}>
                       <td className="px-5 py-3">
