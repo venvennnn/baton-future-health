@@ -1,5 +1,6 @@
 "use client";
 
+import { ClinicFilter } from "@/components/clinic-filter";
 import { useDemo } from "@/components/providers";
 import { bottleneckTable, delaySummary, programmeCounts, worklist } from "@/lib/analytics";
 import { rebalanceProjection } from "@/lib/coordination";
@@ -39,13 +40,18 @@ export function Bottlenecks() {
   );
 
   return (
-    <main className="mx-auto flex w-full max-w-[1400px] flex-col gap-8 px-4 py-8 sm:px-6">
-      <div className="flex flex-col justify-between gap-3 sm:flex-row">
-        <div>
-          <h1 className="text-3xl font-black tracking-tight sm:text-4xl">Facility bottlenecks</h1>
-          <p className="mt-1 max-w-3xl text-slate-600">Where synthetic referrals are waiting, by facility and stage. Completed transition times are separate from the current age of open cases.</p>
-        </div>
-        <span className="h-fit rounded-md border border-blue-100 bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700">Synthetic demo</span>
+    <main className="mx-auto flex w-full max-w-7xl flex-col gap-5 px-4 py-8 sm:px-6 lg:px-8">
+      <div>
+        <p className="text-[11px] font-bold uppercase tracking-wider text-blue-800">Network view · from this case file</p>
+        <h1 className="text-3xl font-extrabold tracking-tight text-slate-950">Facilities and network bottlenecks</h1>
+        <p className="mt-1 text-sm text-slate-700">Open-case age by stage. These are not live hospital waits.</p>
+        <div className="mt-3"><ClinicFilter /></div>
+      </div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-card"><p className="text-[11px] font-bold uppercase tracking-wider text-slate-700">Endoscopy facilities</p><p className="mt-2 text-3xl font-extrabold">{ENDOSCOPY_FACILITIES.length}</p><p className="mt-1 text-xs text-slate-700">Shared with the case file</p></article>
+        <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-card"><p className="text-[11px] font-bold uppercase tracking-wider text-slate-700">Longest open booking</p><p className="mt-2 text-3xl font-extrabold">{saturated?.median === null || saturated?.median === undefined ? "—" : formatDays(saturated.median).replace(" days", "d").replace(" day", "d")}</p><p className="mt-1 text-xs text-slate-700">{saturated ? saturated.facility.short : "No open booking queue"}</p></article>
+        <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-card"><p className="text-[11px] font-bold uppercase tracking-wider text-slate-700">Open cases</p><p className="mt-2 text-3xl font-extrabold">{scoped.filter((item) => !item.closed).length}</p><p className="mt-1 text-xs text-slate-700">{programme.attendedWithoutClosure} attended and still open</p></article>
+        <article className="rounded-2xl border border-red-200 bg-red-50 p-5 shadow-card"><p className="text-[11px] font-bold uppercase tracking-wider text-red-800">Confirmed slot constraints</p><p className="mt-2 text-3xl font-extrabold text-red-700">{delays.confirmedSlotConstraints}</p><p className="mt-1 text-xs text-red-800">Only when the case itself records it</p></article>
       </div>
 
       <section data-tour="facility-radar" className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -156,29 +162,31 @@ export function Bottlenecks() {
       </div>
 
       {projection && saturated && quieter ? (
-        <section data-tour="facility-rebalance" className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="font-bold">Traffic rebalancing</h2>
-          <p className="mt-1 max-w-3xl text-sm text-slate-500">
-            Divert a share of routine patients from {saturated.facility.name}, the longest open booking age in this file, toward {quieter.facility.name}. The figures below are a projection in this browser. No patient is moved.
-          </p>
-          <label className="mt-4 block">
-            <span className="flex justify-between text-sm font-semibold">
-              <span>Routine quota to divert</span>
-              <span className="text-blue-800">{quota}%</span>
-            </span>
-            <input className="mt-2 w-full accent-blue-700" type="range" min={10} max={60} step={5} value={quota} onChange={(event) => setQuota(Number(event.target.value))} aria-label="Routine quota to divert" />
-          </label>
-          <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            <article className="rounded-xl bg-amber-50 p-4">
-              <div className="text-xs font-bold uppercase text-amber-900">{saturated.facility.short} · projected booking age</div>
-              <div className="mt-1 text-3xl font-black">{formatDays(projection.origin)}</div>
-              <p className="text-xs text-slate-600">File median now {formatDays(saturated.median ?? 0)} · open n={saturated.n}</p>
-            </article>
-            <article className="rounded-xl bg-blue-50 p-4">
-              <div className="text-xs font-bold uppercase text-blue-900">{quieter.facility.short} · projected booking age</div>
-              <div className="mt-1 text-3xl font-black">{formatDays(projection.target)}</div>
-              <p className="text-xs text-slate-600">File median now {formatDays(quieter.median ?? 0)} · open n={quieter.n}</p>
-            </article>
+        <section data-tour="facility-rebalance" className="rounded-2xl border border-slate-200 bg-white p-5 shadow-card">
+          <div className="mb-4">
+            <h2 className="text-lg font-bold text-slate-900">Rebalance referral traffic</h2>
+            <p className="text-sm text-slate-700">A projection in this browser. Moving the slider does not transfer a patient.</p>
+          </div>
+          <div className="grid grid-cols-1 items-center gap-4 rounded-xl border border-slate-200 bg-slate-50 p-4 lg:grid-cols-12">
+            <div className="rounded-lg border border-slate-200 bg-white p-4 lg:col-span-4">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-red-800">Origin (longest open booking)</p>
+              <p className="font-bold text-slate-900">{saturated.facility.name}</p>
+              <p className="text-xs text-slate-700">Open n={saturated.n} · file median {formatDays(saturated.median ?? 0)}</p>
+              <p className="mt-2 text-2xl font-extrabold text-slate-950">{formatDays(projection.origin)}</p>
+              <p className="text-[11px] text-slate-600">Projected booking age</p>
+            </div>
+            <div className="px-1 lg:col-span-4">
+              <div className="flex justify-between text-sm"><b>Transfer quota</b><b className="text-blue-800">{quota}%</b></div>
+              <input className="mt-2 w-full accent-blue-800" type="range" min={10} max={60} step={5} value={quota} onChange={(event) => setQuota(Number(event.target.value))} aria-label="Routine quota to divert" />
+              <div className="flex justify-between text-[11px] text-slate-700"><span>10%</span><span>60%</span></div>
+            </div>
+            <div className="rounded-lg border border-slate-200 bg-white p-4 lg:col-span-4">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-700">Quieter receiving site</p>
+              <p className="font-bold text-slate-900">{quieter.facility.name}</p>
+              <p className="text-xs text-slate-700">Open n={quieter.n} · file median {formatDays(quieter.median ?? 0)}</p>
+              <p className="mt-2 text-2xl font-extrabold text-slate-950">{formatDays(projection.target)}</p>
+              <p className="text-[11px] text-slate-600">Projected booking age</p>
+            </div>
           </div>
         </section>
       ) : null}

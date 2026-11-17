@@ -12,7 +12,8 @@ const config: Config = {
         mute: "#444653",
       },
       boxShadow: {
-        card: "0 1px 8px rgba(15, 23, 42, 0.06)",
+        card: "0 4px 12px -2px rgba(0,0,0,0.05), 0 2px 6px -1px rgba(0,0,0,0.02)",
+        window: "0 20px 40px -15px rgba(0,0,0,0.07), 0 0 1px 1px rgba(0,0,0,0.05)",
       },
     },
   },

@@ -5,9 +5,9 @@ import type { ScreeningCase } from "@/lib/types";
 import { useEffect, useId, useMemo, useState } from "react";
 
 const CHECKS = [
-  { id: "egfr", label: "eGFR on file", detail: "Kidney function from the last 30 days is attached before the request is recorded." },
+  { id: "egfr", label: "eGFR / renal labs", detail: "Kidney function is attached before the request is recorded." },
   { id: "hold", label: "Blood-thinner hold plan", detail: "The hold, or a note that none is needed, is written down." },
-  { id: "sedation", label: "Sedation risk reviewed", detail: "ASA class and cardiac risk are reviewed before a simulated handover." },
+  { id: "sedation", label: "ASA sedation risk score", detail: "Cardiac and sedation risk are reviewed before a simulated handover." },
 ] as const;
 
 export function ReadinessGate({ onReady }: { onReady: (ready: boolean) => void }) {
@@ -20,35 +20,26 @@ export function ReadinessGate({ onReady }: { onReady: (ready: boolean) => void }
   }, [onReady, ready]);
 
   return (
-    <section data-tour="record-readiness" className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-100">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h2 className="text-lg font-bold">Pre-referral readiness</h2>
-          <p className="mt-1 text-sm text-slate-500">Clear these before a simulated handover can be recorded. This stops an incomplete request in the demo. Nothing is sent to a hospital.</p>
-        </div>
-        <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-bold ${ready ? "bg-emerald-100 text-emerald-900" : "bg-amber-100 text-amber-950"}`}>
-          {done} of {CHECKS.length} cleared
-        </span>
+    <div data-tour="record-readiness" className="space-y-2 border-b border-slate-200 p-4 lg:border-b-0 lg:border-r">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-[11px] font-bold uppercase tracking-wider text-slate-700">Facility readiness checklist</p>
+        <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[11px] font-bold ${ready ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-amber-200 bg-amber-50 text-amber-900"}`}>{done} of {CHECKS.length}</span>
       </div>
-      <ul className="mt-4 flex flex-col gap-2">
-        {CHECKS.map((item) => (
-          <li key={item.id}>
-            <label className={`flex cursor-pointer gap-3 rounded-xl p-3 ${checked[item.id] ? "bg-emerald-50" : "bg-slate-50"}`}>
-              <input
-                type="checkbox"
-                className="mt-1 accent-blue-700"
-                checked={Boolean(checked[item.id])}
-                onChange={(event) => setChecked((current) => ({ ...current, [item.id]: event.target.checked }))}
-              />
-              <span>
-                <span className="block text-sm font-bold">{item.label}</span>
-                <span className="block text-xs text-slate-600">{item.detail}</span>
-              </span>
-            </label>
-          </li>
-        ))}
-      </ul>
-    </section>
+      {CHECKS.map((item) => (
+        <label key={item.id} className={`flex cursor-pointer items-start gap-2.5 rounded-lg border p-2.5 ${checked[item.id] ? "border-slate-200 bg-white hover:bg-slate-50" : "border-amber-200 bg-amber-50"}`}>
+          <input
+            type="checkbox"
+            className="mt-0.5 accent-emerald-600"
+            checked={Boolean(checked[item.id])}
+            onChange={(event) => setChecked((current) => ({ ...current, [item.id]: event.target.checked }))}
+          />
+          <span>
+            <span className={`block text-sm font-bold ${checked[item.id] ? "text-slate-900" : "text-amber-900"}`}>{item.label}</span>
+            <span className="block text-xs text-slate-700">{item.detail}</span>
+          </span>
+        </label>
+      ))}
+    </div>
   );
 }
 
@@ -92,24 +83,23 @@ export function SbarThread({ item }: { item: ScreeningCase }) {
   const [saved, setSaved] = useState<string | null>(null);
 
   return (
-    <section data-tour="record-sbar" className="flex flex-col rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-100">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h2 className="text-lg font-bold">Async SBAR e-consult</h2>
-          <p className="mt-1 text-sm text-slate-500">A local thread between the primary doctor and a GI note. Messages stay in this browser. They are not delivered.</p>
-        </div>
-        <span className="shrink-0 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-600">Not sent</span>
+    <div data-tour="record-sbar" className="space-y-3 p-4">
+      <div className="flex items-center justify-between">
+        <p className="text-[11px] font-bold uppercase tracking-wider text-slate-700">Async SBAR e-consult thread</p>
+        <span className="text-[11px] text-slate-700">Saved in this browser · not sent</span>
       </div>
-      <div className="mt-4 flex max-h-72 flex-col gap-3 overflow-y-auto">
+      <div className="max-h-72 space-y-2.5 overflow-y-auto pr-1">
         {messages.map((message) => (
-          <article key={message.id} className={`max-w-[95%] rounded-2xl p-3 text-sm ${message.role === "primary" ? "self-start bg-slate-100" : "self-end bg-blue-50"}`}>
-            <div className="text-[11px] font-bold uppercase text-slate-500">{message.role === "primary" ? "Primary" : "GI"} · {message.name}</div>
-            <p className="mt-1 text-slate-800">{message.text}</p>
+          <article key={message.id} className={`rounded-xl border p-3 shadow-sm ${message.role === "gi" ? "border-emerald-200 bg-emerald-50" : "border-slate-200 bg-white"}`}>
+            <div className="mb-1 flex justify-between gap-2 text-xs">
+              <b className={message.role === "gi" ? "text-emerald-700" : "text-blue-800"}>{message.name}</b>
+            </div>
+            <p className="text-sm text-slate-900">{message.text}</p>
           </article>
         ))}
       </div>
       <form
-        className="mt-4 flex flex-col gap-2"
+        className="flex gap-2"
         onSubmit={(event) => {
           event.preventDefault();
           const text = draft.trim();
@@ -119,22 +109,20 @@ export function SbarThread({ item }: { item: ScreeningCase }) {
             { id: `local-${current.length}`, role: "primary", name: item.physician, text },
           ]);
           setDraft("");
-          setSaved("Saved in this browser. The message was not sent to a specialist.");
+          setSaved("Saved in this browser. The message was not sent.");
         }}
       >
-        <label className="text-xs font-bold uppercase text-slate-500" htmlFor={`consult-${item.id}`}>Reply from the primary doctor</label>
-        <textarea
+        <input
           id={`consult-${item.id}`}
           value={draft}
           onChange={(event) => setDraft(event.target.value)}
-          rows={2}
-          placeholder="Ask about cardiac risk, medicines, or timing. It stays on this page."
-          className="rounded-xl bg-slate-50 px-3 py-2 text-sm outline-none ring-1 ring-slate-200"
+          placeholder="Reply to GI triage…"
+          className="flex-1 rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-900"
         />
-        <button type="submit" className="self-start rounded-full bg-slate-900 px-4 py-2 text-sm font-bold text-white">Save reply locally</button>
+        <button type="submit" className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-800">Send</button>
       </form>
-      {saved ? <p className="mt-2 rounded-xl bg-amber-50 p-3 text-sm text-amber-950">{saved}</p> : null}
-    </section>
+      {saved ? <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-950">{saved}</p> : null}
+    </div>
   );
 }
 
@@ -158,26 +146,26 @@ export function PathologyLock({ item, onRecord }: { item: ScreeningCase; onRecor
   ].filter(Boolean) as string[];
 
   return (
-    <section data-tour="record-lock" className={`rounded-2xl p-5 shadow-sm ring-1 ring-slate-100 ${pathologyReady ? "bg-white" : "lock-stripe bg-white"}`}>
-      <div className="flex items-start justify-between gap-3">
+    <section data-tour="record-lock" className={`mt-4 rounded-xl border border-slate-300 p-4 ${item.closed || pathologyReady ? "bg-white" : "locked-stripes"}`}>
+      <div className="flex items-start gap-3">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-900 text-white">🔒</div>
         <div>
-          <h2 className="text-lg font-bold">Pathology hard lock</h2>
-          <p className="mt-1 text-sm text-slate-500">Closure stays locked until a biopsy file is chosen and a disposition is selected. Attendance is still required. A saved note is not a transmitted report.</p>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-sm font-bold text-slate-950">Closure is locked until pathology is chosen</span>
+            <span className="rounded border border-slate-300 bg-white px-2 py-0.5 text-[11px] font-semibold text-slate-900">{item.closed ? "Closed in the file" : pathologyReady ? "Pathology gate cleared" : "Clinical safety hard lock"}</span>
+          </div>
+          <p className="mt-1 text-sm text-slate-800">To close this case, choose a biopsy result and either Oncology MDT or a 3-year recall. The colonoscopy also has to have been attended. A saved note stays in this browser.</p>
         </div>
-        <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-bold ${item.closed ? "bg-emerald-100 text-emerald-900" : pathologyReady ? "bg-amber-100 text-amber-950" : "bg-slate-900 text-white"}`}>
-          {item.closed ? "Closed in the file" : pathologyReady ? "Pathology gate cleared" : "Locked"}
-        </span>
       </div>
 
       {item.closed ? (
-        <p className="mt-4 rounded-xl bg-emerald-50 p-3 text-sm text-emerald-900">This case is already closed in the shared file. The lock is not offered again.</p>
+        <p className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-900">This case is already closed in the shared file. The lock is not offered again.</p>
       ) : (
         <div className="mt-4 flex flex-col gap-3">
-          <label className="text-sm font-semibold">
-            Biopsy result
+          <label className="block text-xs font-semibold text-slate-900">1. Biopsy result
             <input
               type="file"
-              className="mt-1 block w-full text-sm text-slate-600 file:mr-3 file:rounded-full file:border-0 file:bg-slate-100 file:px-3 file:py-1.5 file:text-sm file:font-bold"
+              className="mt-1 block w-full rounded-lg border border-slate-300 bg-white text-xs text-slate-800 file:mr-3 file:border-0 file:bg-slate-900 file:px-3 file:py-2 file:font-semibold file:text-white"
               onChange={(event) => {
                 const file = event.target.files?.[0];
                 setFileName(file?.name ?? "");
@@ -190,7 +178,7 @@ export function PathologyLock({ item, onRecord }: { item: ScreeningCase; onRecor
             <legend className="text-sm font-semibold">Disposition</legend>
             <div className="mt-2 flex flex-col gap-2">
               {DISPOSITIONS.map((option) => (
-                <label key={option.id} className="flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-2 text-sm font-semibold">
+                <label key={option.id} className="flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold">
                   <input
                     type="radio"
                     name={group}
@@ -223,7 +211,7 @@ export function PathologyLock({ item, onRecord }: { item: ScreeningCase; onRecor
               setNotice(detail);
             }}
           >
-            Record simulated closure
+            {canRecord ? "Record simulated closure" : "Close case (needs biopsy, disposition, and attendance)"}
           </button>
           {notice ? <p className="rounded-xl bg-amber-50 p-3 text-sm text-amber-950">{notice}</p> : null}
         </div>
@@ -250,11 +238,11 @@ export function EquityPareto() {
   const cy = yOf(current.completions);
 
   return (
-    <section data-tour="sim-pareto" className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-100">
-      <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
+    <section data-tour="sim-pareto" className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-card">
+      <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
         <div>
-          <h2 className="text-lg font-bold">Equity and completion</h2>
-          <p className="mt-1 max-w-3xl text-sm text-slate-500">A teaching curve for interpreter prioritization. The language gap moves from 31.4% to 2.1% while the illustrated completion count rises. This is not a Department of Health result, and it is separate from the seeded Kaplan–Meier run.</p>
+          <h2 className="text-lg font-bold text-slate-900">Equity vs. completion — Pareto frontier</h2>
+          <p className="mt-0.5 text-sm text-slate-700">A teaching curve. Interpreter priority moves the language gap from 31.4% to 2.1% while illustrated completions rise. This is not a Department of Health result, and it is separate from the seeded model.</p>
         </div>
         <div className="flex gap-4 text-right">
           <div>
@@ -267,7 +255,13 @@ export function EquityPareto() {
           </div>
         </div>
       </div>
-      <svg viewBox={`0 0 ${width} ${height}`} className="mt-3 h-72 w-full" role="img" aria-label="Illustrative chart of language gap against completions">
+      <div className="flex flex-wrap gap-4 text-xs text-slate-800">
+        <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded-full bg-slate-500" />31.4% gap, fewer completions</span>
+        <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded-full bg-blue-800 ring-2 ring-blue-200" />Current point</span>
+        <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded-full bg-emerald-600" />2.1% gap, more completions</span>
+      </div>
+      <div className="overflow-x-auto rounded-xl border border-slate-200 bg-slate-50 p-2">
+      <svg viewBox={`0 0 ${width} ${height}`} className="h-72 w-full min-w-[620px]" role="img" aria-label="Illustrative chart of language gap against completions">
         {[1680, 1760, 1840, 1910].map((value) => (
           <g key={value}>
             <line x1={pad.left} x2={width - pad.right} y1={yOf(value)} y2={yOf(value)} stroke="#e2e8f0" />
@@ -280,7 +274,8 @@ export function EquityPareto() {
         <polyline fill="none" stroke="#1d4ed8" strokeWidth="3" points={line} />
         <circle cx={cx} cy={cy} r="7" fill="#0f172a" />
       </svg>
-      <p className="text-xs text-slate-500">Vertical axis is illustrated completions. Horizontal axis is the language gap, and it runs from 31.4% on the left to 2.1% on the right.</p>
+      </div>
+      <p className="text-xs text-slate-600">Vertical axis is illustrated completions. Horizontal axis is the language gap, from 31.4% on the left to 2.1% on the right.</p>
       <label className="mt-2 block rounded-xl bg-slate-50 p-4">
         <span className="flex justify-between text-sm font-semibold">
           <span>Interpreter prioritization</span>

@@ -1,12 +1,9 @@
-import { HomeFlow } from "@/components/home-flow";
-import { ScrollStory } from "@/components/scroll-story";
-import "./home.css";
+import { Overview } from "@/components/overview";
 
 export default function HomePage() {
   return (
     <main>
-      <ScrollStory />
-      <HomeFlow />
+      <Overview />
     </main>
   );
 }

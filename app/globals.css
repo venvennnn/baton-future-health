@@ -10,18 +10,27 @@
 
 body {
   margin: 0;
-  background: #fff;
-  color: #131b2e;
+  background: #fafbfc;
+  color: #0f172a;
+}
+
+.nav-link {
+  border-bottom: 2px solid transparent;
+}
+.nav-link[aria-current="page"] {
+  color: #1e40af;
+  border-bottom-color: #1e40af;
+  font-weight: 700;
+}
+
+.locked-stripes {
+  background-image: repeating-linear-gradient(135deg, #f1f5f9 0, #f1f5f9 8px, #e2e8f0 8px, #e2e8f0 16px);
 }
 
 .material-symbols-outlined {
   font-variation-settings: "FILL" 0, "wght" 500, "GRAD" 0, "opsz" 24;
   line-height: 1;
   user-select: none;
-}
-
-.lock-stripe {
-  background-image: repeating-linear-gradient(-45deg, transparent, transparent 8px, rgba(15, 23, 42, 0.045) 8px, rgba(15, 23, 42, 0.045) 16px);
 }
 
 .tour-offer {

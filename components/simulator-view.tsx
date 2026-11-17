@@ -79,20 +79,17 @@ export function SimulatorView() {
   const completeDelta = navigation.completed / navigation.n - baseline.completed / baseline.n;
 
   return (
-    <main className="mx-auto flex w-full max-w-[1360px] flex-col gap-8 px-4 py-6 sm:px-6">
-      <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
-        <div className="max-w-3xl">
-          <div className="flex flex-wrap gap-2">
-            <span className="rounded-full bg-blue-50 px-3 py-1 text-sm font-bold text-blue-800">Synthetic cohort n={cohort.length.toLocaleString()} · seed 26771</span>
-            <span className="rounded-full bg-amber-50 px-3 py-1 text-sm font-semibold text-amber-900">Model output, not a Department of Health verification</span>
-          </div>
-          <h1 className="mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl">Colorectal screening capacity simulator</h1>
-          <p className="mt-1 text-sm text-slate-600">The navigation experiment varies calls, strategy, slots, and teach-back. Resource and routing comparisons stay on their own fixed policies and the same seeded cohort. Illustrative percentages from the design file are not reused as results.</p>
+    <main className="mx-auto flex w-full max-w-7xl flex-col gap-5 px-4 py-8 sm:px-6 lg:px-8">
+      <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
+        <div className="max-w-2xl">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-blue-800">Seeded model · n={cohort.length.toLocaleString()}</span>
+          <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-slate-950">Policy Simulator — screening pathway</h1>
+          <p className="mt-1 text-sm text-slate-700">Figures below are model output on synthetic data, or a labeled teaching curve. They are not a Department of Health result.</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <button type="button" className="rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold" onClick={() => { setCalls(8); setSlots(15); setTeachBack(true); setStrategy("benefit"); setReplicates(null); }}>Reset</button>
-          <button type="button" className="rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold" onClick={download}>Export synthetic JSON</button>
-          <button type="button" className="rounded-full bg-blue-700 px-4 py-2 text-sm font-semibold text-white" onClick={runReplicates} disabled={running}>{running ? "Running replicates…" : "Run 8 replicates"}</button>
+          <button type="button" className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-800 hover:bg-slate-50" onClick={() => { setCalls(8); setSlots(15); setTeachBack(true); setStrategy("benefit"); setReplicates(null); }}>Reset to baseline</button>
+          <button type="button" className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-800 hover:bg-slate-50" onClick={download}>Save scenario</button>
+          <button type="button" className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-800" onClick={runReplicates} disabled={running}>{running ? "Running…" : "Run simulation"}</button>
         </div>
       </div>
       {replicates ? <p className="rounded-xl bg-slate-50 p-3 text-sm">{replicates}</p> : null}
@@ -105,8 +102,8 @@ export function SimulatorView() {
       </section>
 
       <div className="grid items-start gap-6 lg:grid-cols-12">
-        <section data-tour="sim-controls" className="flex flex-col gap-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-100 lg:col-span-5">
-          <h2 className="font-bold">Navigation experiment</h2>
+        <section data-tour="sim-controls" className="flex flex-col gap-5 self-start rounded-2xl border border-slate-200 bg-white p-5 shadow-card lg:col-span-4">
+          <h2 className="text-lg font-bold text-slate-900">Intervention levers</h2>
           <label className="rounded-xl bg-slate-50 p-4">
             <span className="flex justify-between font-semibold"><span>A. Navigator calls / day</span><span className="text-blue-700">{calls}</span></span>
             <p className="text-xs text-slate-500">Attempts available each simulated day. After 4 unsuccessful attempts a patient is left for later patients.</p>
@@ -136,7 +133,7 @@ export function SimulatorView() {
           </button>
         </section>
 
-        <section className="flex flex-col gap-4 lg:col-span-7">
+        <section className="flex flex-col gap-4 lg:col-span-8">
           <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-100">
             <h2 className="font-bold">Baseline versus this navigation run</h2>
             <p className="text-xs text-slate-500">Baseline is 6 calls/day, FIFO, no extra slots, teach-back off. Same cohort and seed.</p>

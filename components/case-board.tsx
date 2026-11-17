@@ -1,5 +1,6 @@
 "use client";
 
+import { ClinicFilter } from "@/components/clinic-filter";
 import { useDemo } from "@/components/providers";
 import { daysSinceResult, destinationOptions, filterCases, isHighStall, isOverdue, isRejected, kpis, maskEmiratesId, overdueBy, stageCounts, stallScore } from "@/lib/analytics";
 import { formatDays } from "@/lib/dates";
@@ -20,124 +21,117 @@ export function CaseBoard() {
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState(DEMO_CASE_ID);
   const [notice, setNotice] = useState<string | null>(null);
+  const [breachedOnly, setBreachedOnly] = useState(false);
   const scoped = useMemo(
     () => cases.filter((item) => clinicId === "all" || item.originFacilityId === clinicId || item.facilityId === clinicId || item.endoscopyFacilityId === clinicId),
     [cases, clinicId],
   );
   const metrics = kpis(scoped);
   const counts = stageCounts(scoped);
-  const filtered = useMemo(() => filterCases(scoped, query, stage).sort((a, b) => stallScore(b) - stallScore(a)), [scoped, query, stage]);
+  const filtered = useMemo(() => {
+    const rows = filterCases(scoped, query, stage).sort((a, b) => stallScore(b) - stallScore(a));
+    return breachedOnly ? rows.filter((item) => isOverdue(item)) : rows;
+  }, [scoped, query, stage, breachedOnly]);
   const selected = filtered.find((item) => item.id === selectedId) ?? filtered[0];
   const options = selected ? destinationOptions(selected, cases) : [];
   const recommended = options.find((option) => !option.rejected) ?? options[0];
 
   return (
-    <main className="mx-auto flex w-full max-w-[1360px] flex-col gap-6 px-4 py-6 sm:px-6">
+    <main className="mx-auto flex w-full max-w-7xl flex-col gap-5 px-4 py-8 sm:px-6 lg:px-8">
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
         <div>
-          <div className="flex flex-wrap items-center gap-2 text-sm font-bold uppercase tracking-wide text-blue-700">
-            <span className="h-6 w-2.5 rounded-full bg-blue-700" />
-            Abu Dhabi colorectal screening operations
-            <span className="text-xs font-medium normal-case text-slate-500">Synthetic case file · not a live synchronisation</span>
-          </div>
-          <h1 className="mt-1 text-3xl font-extrabold tracking-tight sm:text-4xl">Case Board · Staff daily worklist</h1>
-          <p className="mt-1 max-w-2xl text-sm text-slate-600">Triage positive FIT pathways, see who owns each case, and open the record. Counts are calculated from this case file.</p>
-        </div>
-        <div className="rounded-full bg-slate-100 px-4 py-2 text-sm">
-          <span className="text-slate-500">Protocol label: </span>
-          <span className="font-bold">FIT positive follow-up · demo</span>
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-blue-800">Synthetic case file</span>
+          <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-slate-950">Case Board — Staff Daily Worklist</h1>
+          <p className="mt-1 text-sm text-slate-700">Counts are calculated from this file. Nothing here is a live synchronisation.</p>
         </div>
       </div>
 
-      <section data-tour="board-kpis" className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
-        <Kpi label="Open positive FIT" value={String(metrics.open)} note={`+${metrics.newThisWeek} with result in 7 days`} icon="science" />
-        <Kpi label="Overdue handovers" value={String(metrics.overdue)} note="Open, unbooked, past 14 days" icon="warning" alert />
-        <Kpi label="Rejected referrals" value={String(metrics.rejected)} note="Returned or eligible-slot rejection" icon="sync_problem" />
-        <Kpi label="High stall risk" value={String(metrics.highStall)} note="28+ days, procedure not attended" icon="hourglass_bottom" />
-        <Kpi
-          label="Mean days to booking"
-          value={metrics.meanDaysToBooking === null ? "—" : metrics.meanDaysToBooking.toFixed(1)}
-          note={metrics.bookingDenominator ? `Completed booking transitions only (n=${metrics.bookingDenominator})` : "No completed booking transition"}
-          icon="timer"
-        />
+      <section data-tour="board-kpis" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <Kpi label="Open cases" value={String(metrics.open)} />
+        <Kpi label="Inside 14-day target" value={String(Math.max(0, metrics.open - metrics.overdue))} note={metrics.open ? `${Math.round(((metrics.open - metrics.overdue) / metrics.open) * 1000) / 10}% of open` : undefined} />
+        <Kpi label="Past 14 days" value={String(metrics.overdue)} alert />
+        <Kpi label="Returned referrals" value={String(metrics.rejected)} />
       </section>
 
-      <div className="flex flex-col gap-3 rounded-2xl bg-slate-50 p-2 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex min-w-0 flex-1 flex-wrap gap-1">
-          <FilterButton active={stage === "all"} onClick={() => setStage("all")} label={`All stages (${counts.all})`} />
-          {STAGE_ORDER.map((item) => (
-            <FilterButton key={item} active={stage === item} onClick={() => setStage(item)} label={`${STAGE_LABEL[item]} (${counts[item]})`} />
-          ))}
+      {metrics.overdue > 0 ? (
+        <div className="relative overflow-hidden rounded-xl border border-red-200 bg-white p-4 pl-6 shadow-sm">
+          <div className="absolute bottom-0 left-0 top-0 w-1.5 bg-red-600" />
+          <div className="flex flex-col justify-between gap-3 lg:flex-row lg:items-center">
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-sm font-bold text-red-800">{metrics.overdue} open cases are past the 14-day booking target</span>
+                <span className="rounded-full bg-red-600 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">Past target</span>
+              </div>
+              <p className="mt-0.5 text-sm text-slate-700">These ages come from the case file. Isolating them does not notify a navigator.</p>
+            </div>
+            <button type="button" onClick={() => setBreachedOnly((value) => !value)} className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-700">
+              {breachedOnly ? "Show every case" : "Isolate past-target cases"}
+            </button>
+          </div>
         </div>
-        <label className="relative min-w-[240px] flex-1 lg:max-w-xs">
-          <span className="material-symbols-outlined absolute left-3 top-2.5 text-[18px] text-slate-400">search</span>
-          <input
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search name, case, Emirates ID, clinic"
-            className="w-full rounded-full border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm outline-none ring-blue-600 focus:ring-2"
-          />
-        </label>
+      ) : null}
+
+      <div className="flex flex-col justify-between gap-3 rounded-xl border border-slate-200 bg-white p-3 shadow-sm xl:flex-row xl:items-center">
+        <div className="flex flex-1 flex-wrap items-center gap-3">
+          <ClinicFilter />
+          <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search by case, name, or Emirates ID…" className="min-w-[260px] max-w-md flex-1 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900" />
+          <div className="flex flex-wrap items-center gap-0.5 rounded-lg bg-slate-100 p-1">
+            <FilterButton active={stage === "all" && !breachedOnly} onClick={() => { setStage("all"); setBreachedOnly(false); }} label={`All (${counts.all})`} />
+            {STAGE_ORDER.map((item) => (
+              <FilterButton key={item} active={stage === item} onClick={() => { setStage(item); setBreachedOnly(false); }} label={`${STAGE_LABEL[item]} (${counts[item]})`} />
+            ))}
+          </div>
+        </div>
       </div>
 
-      <div className="grid items-start gap-6 lg:grid-cols-12">
-        <section className="flex flex-col gap-3 lg:col-span-7">
-          <div className="flex items-center justify-between text-sm">
-            <span className="font-bold">Screening queue <span className="ml-1 rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600">{filtered.length} shown</span></span>
-            <span className="text-slate-500">Sorted by stall score</span>
+      <div className="grid items-start gap-5 xl:grid-cols-12">
+        <section data-tour="board-queue" className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-card xl:col-span-8">
+          <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-5 py-3">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-bold text-slate-900">Queue Dispatch List</span>
+              <span className="rounded-full bg-slate-200 px-2 py-0.5 text-[11px] font-semibold text-slate-800">{filtered.length}</span>
+            </div>
+            <span className="text-[11px] font-semibold text-slate-700">Sorted by time waiting</span>
           </div>
           {filtered.length === 0 ? (
-            <div data-tour="board-queue" className="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center">
+            <div className="p-8 text-center">
               <p className="font-bold">No cases match these filters.</p>
-              <p className="mt-1 text-sm text-slate-500">Clear the search or choose another stage. The case file itself is unchanged.</p>
-              <button type="button" className="mt-4 rounded-full bg-blue-700 px-4 py-2 text-sm font-bold text-white" onClick={() => { setQuery(""); setStage("all"); }}>
-                Show all cases
-              </button>
+              <button type="button" className="mt-4 rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white" onClick={() => { setQuery(""); setStage("all"); setBreachedOnly(false); }}>Show all cases</button>
             </div>
           ) : (
-            filtered.map((item, index) => (
-              <button
-                key={item.id}
-                type="button"
-                data-tour={index === 0 ? "board-queue" : undefined}
-                onClick={() => setSelectedId(item.id)}
-                className={`rounded-2xl bg-white p-4 text-left shadow-sm ring-1 ring-slate-100 ${selected?.id === item.id ? "ring-2 ring-blue-700" : "hover:shadow-md"}`}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex gap-3">
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-700 text-sm font-bold text-white">{item.initials}</span>
-                    <span>
-                      <span className="flex flex-wrap items-center gap-1.5">
-                        <span className="font-extrabold">{item.name}</span>
-                        <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-bold text-blue-800">{item.id}</span>
-                        {isOverdue(item) ? <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-bold text-red-800">+{overdueBy(item)}d overdue</span> : null}
-                        {item.simulatedPending ? <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-900">Simulated</span> : null}
-                      </span>
-                      <span className="mt-1 block text-sm text-slate-500">
-                        {item.age}
-                        {item.sex} · {facilityShort(item.originFacilityId)} · FIT {item.fitUgG} µg/g · {maskEmiratesId(item.emiratesId)}
-                      </span>
-                    </span>
-                  </div>
-                  <StatusChip item={item} />
-                </div>
-                {selected?.id === item.id ? (
-                  <span className="mt-3 grid gap-2 rounded-xl bg-slate-50 p-3 text-sm sm:grid-cols-3">
-                    <Fact label="Stage" value={STAGE_LABEL[item.stage]} />
-                    <Fact label="Accountable team" value={item.ownerTeam} />
-                    <Link href={`/cases/${item.id}`} className="inline-flex items-center justify-center rounded-full bg-blue-700 px-3 py-2 text-sm font-bold text-white">
-                      Open record
-                    </Link>
-                  </span>
-                ) : null}
-              </button>
-            ))
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[720px] text-left text-sm">
+                <thead>
+                  <tr className="border-b border-slate-200 bg-white text-[11px] uppercase tracking-wider text-slate-700">
+                    <th className="px-5 py-2 font-bold">Case and patient</th>
+                    <th className="px-3 py-2 font-bold">Pathway stage</th>
+                    <th className="px-3 py-2 font-bold">Assigned lead</th>
+                    <th className="px-3 py-2 font-bold">Since result</th>
+                    <th className="px-5 py-2 text-right font-bold">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {filtered.map((item) => (
+                    <tr key={item.id} onClick={() => setSelectedId(item.id)} className={`cursor-pointer ${selected?.id === item.id ? "bg-blue-50/70" : "hover:bg-slate-50"}`}>
+                      <td className="px-5 py-3">
+                        <div className="font-bold text-slate-900">{item.name}</div>
+                        <div className="text-xs text-slate-600">{item.id} · {item.age}{item.sex} · FIT {item.fitUgG} · {maskEmiratesId(item.emiratesId)}</div>
+                      </td>
+                      <td className="px-3 py-3"><StatusChip item={item} /></td>
+                      <td className="px-3 py-3 text-slate-800">{item.ownerName}<div className="text-xs text-slate-600">{facilityShort(item.originFacilityId)}</div></td>
+                      <td className={`px-3 py-3 font-semibold ${isOverdue(item) ? "text-red-700" : "text-slate-800"}`}>{daysSinceResult(item)}d{isOverdue(item) ? ` · +${overdueBy(item)}` : ""}</td>
+                      <td className="px-5 py-3 text-right"><Link href={`/cases/${item.id}`} className="text-sm font-semibold text-blue-800 hover:underline">Open</Link></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </section>
 
-        <aside className="flex flex-col gap-3 lg:sticky lg:top-[9.5rem] lg:col-span-5">
+        <aside className="flex flex-col gap-4 xl:sticky xl:top-24 xl:col-span-4">
           {selected ? (
-            <div data-tour="board-inspector" className="rounded-2xl bg-white p-5 shadow-md">
+            <div data-tour="board-inspector" className="rounded-2xl border border-slate-200 bg-white p-5 shadow-card">
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                 <span className="font-bold">Inspector · {selected.id}</span>
                 {isOverdue(selected) ? <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-extrabold text-red-800">Action needed</span> : <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-bold">In view</span>}
@@ -180,7 +174,7 @@ export function CaseBoard() {
               <div className="mt-4 flex flex-col gap-2">
                 <button
                   type="button"
-                  className="rounded-full bg-blue-700 px-4 py-3 text-sm font-bold text-white"
+                  className="w-full rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-800"
                   onClick={() => {
                     if (!recommended) return;
                     recordSimulatedHandover(selected.id, recommended.facilityId);
@@ -192,7 +186,7 @@ export function CaseBoard() {
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
-                    className="rounded-full bg-white px-3 py-2 text-sm font-bold shadow ring-1 ring-slate-200"
+                    className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-50"
                     onClick={() => {
                       recordSimulatedOutreach(selected.id, "call", "Arabic outreach noted locally.");
                       setNotice("Simulated outreach log added. No call was placed.");
@@ -200,7 +194,7 @@ export function CaseBoard() {
                   >
                     Log Arabic outreach
                   </button>
-                  <Link href={`/cases/${selected.id}#audit`} className="rounded-full bg-white px-3 py-2 text-center text-sm font-bold shadow ring-1 ring-slate-200">
+                  <Link href={`/cases/${selected.id}#audit`} className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-center text-sm font-semibold text-slate-800 hover:bg-slate-50">
                     Audit history
                   </Link>
                 </div>
@@ -230,33 +224,26 @@ function Fact({ label, value }: { label: string; value: string }) {
 
 function FilterButton({ active, label, onClick }: { active: boolean; label: string; onClick: () => void }) {
   return (
-    <button type="button" onClick={onClick} aria-pressed={active} className={`whitespace-nowrap rounded-full px-3 py-2 text-sm ${active ? "bg-blue-700 font-bold text-white" : "text-slate-600 hover:bg-white"}`}>
+    <button type="button" onClick={onClick} aria-pressed={active} className={`whitespace-nowrap rounded-md px-2.5 py-1 text-xs font-semibold ${active ? "bg-white text-slate-950 shadow-sm" : "text-slate-600 hover:text-slate-900"}`}>
       {label}
     </button>
   );
 }
 
-function Kpi({ label, value, note, icon, alert = false }: { label: string; value: string; note: string; icon: string; alert?: boolean }) {
+function Kpi({ label, value, note, alert = false }: { label: string; value: string; note?: string; alert?: boolean }) {
   return (
-    <article className={`relative overflow-hidden rounded-2xl p-4 shadow-sm ${alert ? "bg-red-50" : "bg-white"}`}>
-      <div className="flex items-start justify-between gap-2">
-        <span className="text-[11px] font-bold uppercase tracking-wide text-slate-500">{label}</span>
-        <span className={`flex h-8 w-8 items-center justify-center rounded-full ${alert ? "bg-red-100 text-red-700" : "bg-blue-50 text-blue-700"}`}>
-          <span className="material-symbols-outlined text-[18px]">{icon}</span>
-        </span>
-      </div>
-      <div className="mt-2 text-3xl font-extrabold tracking-tight">{value}</div>
-      <p className="mt-1 text-xs text-slate-500">{note}</p>
-      <span className={`absolute inset-x-0 bottom-0 h-1 ${alert ? "bg-red-600" : "bg-slate-200"}`} />
+    <article className={`rounded-xl border p-4 shadow-sm ${alert ? "border-red-200 bg-red-50" : "border-slate-200 bg-white"}`}>
+      <p className={`text-[11px] font-bold uppercase tracking-wider ${alert ? "text-red-800" : "text-slate-600"}`}>{label}</p>
+      <p className={`text-2xl font-extrabold ${alert ? "text-red-700" : "text-slate-900"}`}>{value}{note ? <span className="ml-2 align-middle rounded-full border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 text-xs font-bold text-emerald-700">{note}</span> : null}</p>
     </article>
   );
 }
 
 function StatusChip({ item }: { item: ScreeningCase }) {
-  if (item.closed) return <span className="text-xs font-bold text-emerald-700">Documented closure</span>;
-  if (item.procedureAttended) return <span className="text-xs font-bold text-amber-700">Attended · closure pending</span>;
-  if (isRejected(item)) return <span className="text-xs font-bold text-red-700">Referral returned</span>;
-  if (item.handoverStatus === "booked") return <span className="text-xs font-bold text-emerald-700">Slot recorded</span>;
-  if (isHighStall(item) || isOverdue(item)) return <span className="text-xs font-bold text-red-700">Delay risk</span>;
-  return <span className="text-xs font-bold text-slate-500">{STAGE_LABEL[item.stage]}</span>;
+  if (item.closed) return <span className="rounded-md border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-800">Documented closure</span>;
+  if (item.procedureAttended) return <span className="rounded-md border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-900">Attended · open</span>;
+  if (isRejected(item)) return <span className="rounded-md border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-900">Referral returned</span>;
+  if (item.handoverStatus === "booked") return <span className="rounded-md border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-800">Slot recorded</span>;
+  if (isHighStall(item) || isOverdue(item)) return <span className="rounded-md bg-red-600 px-2 py-0.5 text-[11px] font-bold text-white">Past target</span>;
+  return <span className="rounded-md border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] font-semibold text-slate-800">{STAGE_LABEL[item.stage]}</span>;
 }
