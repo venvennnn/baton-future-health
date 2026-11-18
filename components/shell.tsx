@@ -1,11 +1,16 @@
 "use client";
 
+import { AccessNotice } from "@/components/access-notice";
 import { kpis } from "@/lib/analytics";
+import { entryHref } from "@/lib/access";
+import { logout } from "@/app/login/actions";
 import { useDemo } from "@/components/providers";
 import { useWalkthrough } from "@/components/walkthrough";
+import type { Role } from "@/lib/session";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Suspense } from "react";
 
 const COPY = {
   en: {
@@ -16,7 +21,9 @@ const COPY = {
     simulator: "Policy Simulator",
     governance: "Governance",
     overdue: "Overdue",
-    demo: "Open demo",
+    user: "User",
+    admin: "Admin",
+    logout: "Logout",
     clinic: "Clinic:",
     all: "All Abu Dhabi clinics",
     network: "Abu Dhabi Screening Network",
@@ -29,26 +36,34 @@ const COPY = {
     simulator: "محاكي السياسة",
     governance: "الحوكمة",
     overdue: "متأخر",
-    demo: "افتح العرض",
+    user: "مستخدم",
+    admin: "مسؤول",
+    logout: "خروج",
     clinic: "العيادة:",
     all: "كل عيادات أبوظبي",
     network: "شبكة فحص أبوظبي",
   },
 } as const;
 
-export function Shell({ children }: { children: React.ReactNode }) {
+export function Shell({ role, children }: { role: Role | null; children: React.ReactNode }) {
   const pathname = usePathname();
   const { cases, locale, setLocale } = useDemo();
   const tour = useWalkthrough();
   const text = COPY[locale];
   const overdue = kpis(cases).overdue;
-  const links = [
-    { href: "/", label: text.overview, icon: "hub" },
-    { href: "/cases", label: text.board, icon: "bar_chart", badge: overdue },
-    { href: "/facilities", label: text.facilities, icon: "clinical_notes" },
-    { href: "/simulator", label: text.simulator, icon: "science" },
-    { href: "/governance", label: text.governance, icon: "layers" },
-  ];
+  const links = role === "user"
+    ? [
+        { href: "/", label: text.overview },
+        { href: "/cases", label: text.board, badge: overdue },
+      ]
+    : role === "admin"
+      ? [
+          { href: "/", label: text.overview },
+          { href: "/facilities", label: text.facilities },
+          { href: "/simulator", label: text.simulator },
+          { href: "/governance", label: text.governance },
+        ]
+      : [];
 
   return (
     <div className="min-h-screen bg-[#fafbfc] text-slate-800" lang={locale}>
@@ -59,41 +74,51 @@ export function Shell({ children }: { children: React.ReactNode }) {
             <Image src="/brand/baton-mark.png" alt="" width={270} height={270} priority unoptimized className="h-7 w-7 shrink-0" />
             <span className="text-xl font-bold tracking-tight text-slate-900">Baton</span>
           </Link>
-          <nav data-tour="main-nav" className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto text-sm sm:gap-4" aria-label="Primary">
-            {links.map((link) => {
-              const on = link.href === "/"
-                ? pathname === "/"
-                : link.href === "/cases"
-                  ? pathname.startsWith("/cases")
-                  : pathname === link.href;
-              return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  aria-current={on ? "page" : undefined}
-                  className="nav-link whitespace-nowrap px-2 py-5 font-medium text-slate-700 transition hover:text-slate-950"
-                >
-                  {link.label}
-                  {link.badge ? <span className="ml-1 text-[11px] font-bold text-red-700">{link.badge}</span> : null}
-                </Link>
-              );
-            })}
-          </nav>
+          {links.length > 0 ? (
+            <nav data-tour="main-nav" className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto text-sm sm:gap-4" aria-label="Primary">
+              {links.map((link) => {
+                const on = link.href === "/"
+                  ? pathname === "/"
+                  : link.href === "/cases"
+                    ? pathname.startsWith("/cases")
+                    : pathname === link.href;
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    aria-current={on ? "page" : undefined}
+                    className="nav-link whitespace-nowrap px-2 py-5 font-medium text-slate-700 transition hover:text-slate-950"
+                  >
+                    {link.label}
+                    {"badge" in link && link.badge ? <span className="ml-1 text-[11px] font-bold text-red-700">{link.badge}</span> : null}
+                  </Link>
+                );
+              })}
+            </nav>
+          ) : <div className="flex-1" />}
           <div className="flex shrink-0 items-center gap-2">
-            {tour.running ? null : (
+            {role && !tour.running ? (
               <button type="button" onClick={tour.start} className="hidden rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800 hover:bg-slate-50 sm:inline-flex">
                 {tour.label}
               </button>
-            )}
+            ) : null}
+            {role ? (
+              <span className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-bold text-blue-800">{role === "user" ? text.user : text.admin}</span>
+            ) : null}
+            {role ? (
+              <form action={logout}>
+                <button type="submit" className="rounded-lg px-2 py-2 text-xs font-semibold text-slate-700 hover:text-slate-950">{text.logout}</button>
+              </form>
+            ) : null}
             <button type="button" className="rounded-lg px-2 py-2 text-xs font-semibold text-slate-600 hover:text-slate-900" onClick={() => setLocale(locale === "en" ? "ar" : "en")}>
               {locale === "en" ? "عربي" : "EN"}
             </button>
-            <Link href="/cases" className="hidden items-center rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-800 md:inline-flex">
-              {text.demo}
-            </Link>
           </div>
         </div>
       </header>
+      <Suspense fallback={null}>
+        <AccessNotice />
+      </Suspense>
       <div>{children}</div>
       <footer className="border-t border-slate-200 bg-white px-4 py-8 text-xs text-slate-700 sm:px-6 lg:px-8">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 sm:flex-row">
@@ -103,9 +128,9 @@ export function Shell({ children }: { children: React.ReactNode }) {
             <span>Synthetic coordination workspace. Not a live clinical system.</span>
           </div>
           <div className="flex gap-6">
-            <Link href="/governance" className="hover:text-slate-950">Governance</Link>
-            <Link href="/governance#audit" className="hover:text-slate-950">Audit notes</Link>
-            <Link href="/governance#safety" className="hover:text-slate-950">Limits</Link>
+            <Link href={entryHref(role, "/governance")} className="hover:text-slate-950">Governance</Link>
+            <Link href={entryHref(role, "/governance#audit")} className="hover:text-slate-950">Audit notes</Link>
+            <Link href={entryHref(role, "/governance#safety")} className="hover:text-slate-950">Limits</Link>
           </div>
         </div>
       </footer>

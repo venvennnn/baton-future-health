@@ -1,6 +1,7 @@
 "use client";
 
 import { ClinicFilter } from "@/components/clinic-filter";
+import { entryHref } from "@/lib/access";
 import { useDemo } from "@/components/providers";
 import { bottleneckTable, delaySummary, programmeCounts, worklist } from "@/lib/analytics";
 import { rebalanceProjection } from "@/lib/coordination";
@@ -234,7 +235,7 @@ export function Bottlenecks() {
                     {row.item.eligibleSlotConstraint ? <span className="ml-2 rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-bold text-red-800">Eligible-slot constraint</span> : null}
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <Link href={`/cases/${row.item.id}`} className="font-bold text-blue-700">Review</Link>
+                    <Link href={entryHref("admin", `/cases/${row.item.id}`)} className="font-bold text-blue-700">Review</Link>
                   </td>
                 </tr>
               ))}
@@ -250,7 +251,7 @@ export function Bottlenecks() {
             <p className="text-sm text-slate-600">Same case file as the board. Attendance is not counted as closure.</p>
           </div>
           <div className="flex gap-2">
-            <Link href="/cases" className="rounded-full bg-blue-700 px-4 py-2 text-sm font-bold text-white">Open case board</Link>
+            <Link href={entryHref("admin", "/cases")} className="rounded-full bg-blue-700 px-4 py-2 text-sm font-bold text-white">Open case board</Link>
             <Link href="/simulator" className="rounded-full border px-4 py-2 text-sm font-bold">Policy simulator</Link>
           </div>
         </div>

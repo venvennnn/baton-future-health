@@ -201,7 +201,8 @@ export const TOUR_UI = {
     label: "Walkthrough",
     offerKicker: "New here",
     offerTitle: "Take the walkthrough",
-    offerBody: "A short tour of the case board, a case record, facility waits, and the simulator. Each step highlights what to look at.",
+    offerBody: "A short tour of the overview, the case board, and a case record.",
+    offerBodyAdmin: "A short tour of the overview, facility waits, the simulator, and governance.",
     start: "Start walkthrough",
     later: "Not now",
     skip: "Skip",
@@ -214,7 +215,8 @@ export const TOUR_UI = {
     label: "جولة",
     offerKicker: "أول زيارة",
     offerTitle: "ابدأ الجولة",
-    offerBody: "جولة قصيرة في لوحة الحالات وسجل حالة وانتظار المنشآت والمحاكي. كل خطوة تُبرز ما يُنظر إليه.",
+    offerBody: "جولة قصيرة في النظرة العامة ولوحة الحالات وسجل الحالة.",
+    offerBodyAdmin: "جولة قصيرة في النظرة العامة وانتظار المنشآت والمحاكي والحوكمة.",
     start: "ابدأ الجولة",
     later: "ليس الآن",
     skip: "تخطي",
@@ -227,15 +229,51 @@ export const TOUR_UI = {
 
 export type TourUi = (typeof TOUR_UI)[keyof typeof TOUR_UI];
 
-export function tourSteps(locale: "en" | "ar"): TourStep[] {
-  return META.map((step) => ({
-    id: step.id,
-    href: step.href,
-    target: step.target,
-    align: step.align,
-    title: COPY[locale][step.id].title,
-    body: COPY[locale][step.id].body,
-  }));
+const USER_STEPS: TourStepId[] = ["banner", "nav", "hero", "flows", "kpis", "queue", "inspector", "milestones", "readiness", "consult", "lock", "routing"];
+const ADMIN_STEPS: TourStepId[] = ["banner", "nav", "hero", "flows", "radar", "facility", "worklist", "rebalance", "simulator", "pareto", "governance"];
+
+const NAV_COPY: Record<"en" | "ar", Record<"user" | "admin", StepCopy>> = {
+  en: {
+    user: {
+      title: "Overview and the case board",
+      body: "Overview and the case board read the same synthetic cases. A case record opens from the board.",
+    },
+    admin: {
+      title: "Overview, waits, and policy",
+      body: "Overview, facility waits, the policy simulator, and the governance notes. Case records open from a User session.",
+    },
+  },
+  ar: {
+    user: {
+      title: "النظرة العامة ولوحة الحالات",
+      body: "هذان الموضعان يقرآن الحالات المصطنعة نفسها. سجل الحالة يُفتح من اللوحة.",
+    },
+    admin: {
+      title: "النظرة العامة والانتظار والسياسة",
+      body: "النظرة العامة وانتظار المنشآت ومحاكي السياسة وملاحظات الحوكمة. سجلات الحالات تُفتح من جلسة المستخدم.",
+    },
+  },
+};
+
+const WORKLIST_ADMIN: Record<"en" | "ar", StepCopy> = {
+  en: {
+    title: "The cases behind a cell",
+    body: "This list is the open cases for the facility and stage you select, longest current wait first. Opening a record needs the User demo.",
+  },
+  ar: {
+    title: "الحالات خلف الخلية",
+    body: "هذه القائمة هي الحالات المفتوحة للمنشأة والمرحلة المختارتين، الأطول انتظارًا أولًا. فتح السجل يحتاج عرض المستخدم.",
+  },
+};
+
+export function tourSteps(locale: "en" | "ar", role: "user" | "admin"): TourStep[] {
+  const ids = role === "user" ? USER_STEPS : ADMIN_STEPS;
+  return ids.map((id) => {
+    const step = META.find((item) => item.id === id);
+    if (!step) throw new Error(`Missing tour step ${id}`);
+    const copy = id === "nav" ? NAV_COPY[locale][role] : id === "worklist" && role === "admin" ? WORKLIST_ADMIN[locale] : COPY[locale][id];
+    return { id: step.id, href: step.href, target: step.target, align: step.align, title: copy.title, body: copy.body };
+  });
 }
 
 export interface Box {

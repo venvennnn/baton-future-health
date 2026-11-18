@@ -1,7 +1,10 @@
+import { entryHref } from "@/lib/access";
 import { getCase } from "@/lib/cases";
+import { requireRole } from "@/lib/guard";
 import Link from "next/link";
 
-export default function GovernancePage() {
+export default async function GovernancePage() {
+  await requireRole("admin");
   const demo = getCase("FIT-26771");
   const bundle = {
     resourceType: "Bundle",
@@ -36,7 +39,7 @@ export default function GovernancePage() {
         <h2 className="text-xl font-bold">Example bundle for {demo?.id}</h2>
         <p className="text-sm text-slate-500">Generated from the local case events. Refreshing after a simulated action does not rewrite this server-rendered example.</p>
         <pre className="mt-3 overflow-auto rounded-xl bg-slate-950 p-4 text-xs text-slate-100">{JSON.stringify(bundle, null, 2)}</pre>
-        <Link href="/cases/FIT-26771#audit" className="mt-3 inline-flex font-bold text-blue-700">Open the FIT-26771 audit history</Link>
+        <Link href={entryHref("admin", "/cases/FIT-26771#audit")} className="mt-3 inline-flex font-bold text-blue-700">Open the FIT-26771 audit history</Link>
       </section>
     </main>
   );

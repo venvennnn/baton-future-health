@@ -1,5 +1,7 @@
 import { Bottlenecks } from "@/components/bottlenecks";
+import { requireRole } from "@/lib/guard";
 
-export default function FacilitiesPage() {
+export default async function FacilitiesPage() {
+  await requireRole("admin");
   return <Bottlenecks />;
 }

@@ -3,11 +3,13 @@ import { spotlightBox, tooltipPosition, tourSteps } from "./walkthrough";
 
 describe("tour steps", () => {
   it("keeps the same route and target in both languages", () => {
-    const en = tourSteps("en");
-    const ar = tourSteps("ar");
+    const en = tourSteps("en", "user");
+    const ar = tourSteps("ar", "user");
+    const admin = tourSteps("en", "admin");
     expect(en.map((step) => step.id)).toEqual(ar.map((step) => step.id));
     expect(en.map((step) => `${step.href}:${step.target}`)).toEqual(ar.map((step) => `${step.href}:${step.target}`));
     expect(new Set(en.map((step) => step.target)).size).toBe(en.length);
+    expect(new Set(admin.map((step) => step.target)).size).toBe(admin.length);
     expect(en.map((step) => step.href)).toEqual([
       "/",
       "/",
@@ -21,6 +23,12 @@ describe("tour steps", () => {
       "/cases/FIT-26771",
       "/cases/FIT-26771",
       "/cases/FIT-26771",
+    ]);
+    expect(admin.map((step) => step.href)).toEqual([
+      "/",
+      "/",
+      "/",
+      "/",
       "/facilities",
       "/facilities",
       "/facilities",
@@ -31,6 +39,9 @@ describe("tour steps", () => {
     ]);
     expect(en.every((step) => step.title && step.body)).toBe(true);
     expect(ar.every((step) => step.title && step.body)).toBe(true);
+    expect(admin.every((step) => step.title && step.body)).toBe(true);
+    expect(en.find((step) => step.id === "nav")?.body).toContain("case board");
+    expect(admin.find((step) => step.id === "nav")?.body).toContain("facility waits");
   });
 });
 
