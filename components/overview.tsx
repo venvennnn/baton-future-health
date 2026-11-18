@@ -1,10 +1,13 @@
+import { DemoCta, HeroActions } from "@/components/role-chooser";
 import { programmeCounts } from "@/lib/analytics";
+import { entryHref } from "@/lib/access";
 import { CASES } from "@/lib/cases";
+import type { Role } from "@/lib/session";
 import Link from "next/link";
 
 const demo = CASES.find((item) => item.id === "FIT-26771");
 
-export function Overview() {
+export function Overview({ role }: { role: Role | null }) {
   const counts = programmeCounts(CASES);
   const closedShare = counts.cohort === 0 ? 0 : Math.round((counts.closed / counts.cohort) * 1000) / 10;
   const attendedShare = counts.cohort === 0 ? 0 : Math.round((counts.attended / counts.cohort) * 1000) / 10;
@@ -17,13 +20,10 @@ export function Overview() {
           <h1 className="mb-6 text-4xl font-extrabold leading-[1.12] tracking-tight text-slate-950 sm:text-5xl lg:text-6xl">Every screening result.<br />Followed through to care.</h1>
           <p className="mx-auto mb-8 max-w-2xl text-lg leading-relaxed text-slate-700 sm:text-xl">Coordinate patient outreach, referrals and follow-up in one shared workspace.</p>
         </div>
-        <div className="mb-3 flex flex-wrap items-center justify-center gap-3.5">
-          <Link href="/cases" className="rounded-full bg-slate-950 px-6 py-3 text-sm font-medium text-white shadow-md transition hover:bg-blue-800">Open demo</Link>
-          <Link href="/cases/FIT-26771" className="rounded-full border border-slate-300 bg-white px-6 py-3 text-sm font-medium text-slate-800 shadow-sm transition hover:bg-slate-50">Explore the pathway</Link>
-        </div>
+        <HeroActions role={role} />
         <p className="text-xs font-medium text-slate-600">Synthetic demonstration</p>
 
-        <div className="mt-12 overflow-hidden rounded-2xl border border-slate-200 bg-white text-left shadow-window">
+        <div id="pathway" className="mt-12 scroll-mt-32 overflow-hidden rounded-2xl border border-slate-200 bg-white text-left shadow-window">
           <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-3">
             <div className="flex items-center space-x-2"><span className="h-3 w-3 rounded-full bg-red-400" /><span className="h-3 w-3 rounded-full bg-amber-400" /><span className="h-3 w-3 rounded-full bg-emerald-400" /></div>
             <div className="mx-auto hidden h-3 w-64 rounded-full bg-slate-200/70 sm:block" />
@@ -37,7 +37,7 @@ export function Overview() {
                 <WindowStep delay="0.18s" done title="Patient outreach" detail={demo ? `${demo.outreach.length} logged touches` : "Logged touches"} />
                 <WindowStep delay="0.31s" done title="Referral" detail="Returned by the receiving team" />
               </div>
-              <Link href="/cases/FIT-26771" className="case-live block rounded-2xl border-2 border-amber-300 bg-white p-5 shadow-card" style={{ animationDelay: "0.22s, 0.9s" }}>
+              <Link href={entryHref(role, "/cases/FIT-26771")} className="case-live block rounded-2xl border-2 border-amber-300 bg-white p-5 shadow-card" style={{ animationDelay: "0.22s, 0.9s" }}>
                 <span className="text-base font-extrabold text-slate-900">FIT-26771</span>
                 <div className="my-3"><span className="inline-block rounded-md border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-800">Referral returned</span></div>
                 <div className="space-y-2 border-t border-slate-100 pt-3 text-xs text-slate-700">
@@ -91,10 +91,10 @@ export function Overview() {
           <p className="text-base text-slate-700 sm:text-lg">See the owner, the blocker and the next action.</p>
         </div>
         <div className="stagger grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-4">
-          <Door href="/cases" kicker="Case Board" kickerClass="border-blue-200 bg-blue-50 text-blue-800" title="Know who owns the next step" body="Daily worklist sorted by how long the case has been waiting." />
-          <Door href="/cases/FIT-26771" kicker="Case Record" kickerClass="border-amber-200 bg-amber-50 text-amber-800" title="Readiness, SBAR and hard lock" body="Checklist, e-consult, modesty routing and pathology-gated closure." />
-          <Door href="/facilities" kicker="Facilities" kickerClass="border-blue-200 bg-blue-50 text-blue-800" title="See where follow-up is waiting" body="Stage latency and a slider to project a quieter queue." />
-          <Door href="/simulator" kicker="Policy Simulator" kickerClass="border-emerald-200 bg-emerald-50 text-emerald-700" title="Equity vs. completion" body="Move interpreter priority along a teaching curve." />
+          <Door href={entryHref(role, "/cases")} kicker="Case Board" kickerClass="border-blue-200 bg-blue-50 text-blue-800" title="Know who owns the next step" body="Daily worklist sorted by how long the case has been waiting." />
+          <Door href={entryHref(role, "/cases/FIT-26771")} kicker="Case Record" kickerClass="border-amber-200 bg-amber-50 text-amber-800" title="Readiness, SBAR and hard lock" body="Checklist, e-consult, modesty routing and pathology-gated closure." />
+          <Door href={entryHref(role, "/facilities")} kicker="Facilities" kickerClass="border-blue-200 bg-blue-50 text-blue-800" title="See where follow-up is waiting" body="Stage latency and a slider to project a quieter queue." />
+          <Door href={entryHref(role, "/simulator")} kicker="Policy Simulator" kickerClass="border-emerald-200 bg-emerald-50 text-emerald-700" title="Equity vs. completion" body="Move interpreter priority along a teaching curve." />
         </div>
       </section>
 
@@ -114,7 +114,7 @@ export function Overview() {
       <section className="bg-slate-950 px-4 py-16 text-white">
         <div className="mx-auto max-w-4xl space-y-6 text-center">
           <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl">Bring the next step into view.</h2>
-          <Link href="/cases" className="inline-block rounded-full bg-white px-7 py-3 text-sm font-semibold text-slate-950 transition hover:bg-slate-100">Open the Baton demo</Link>
+          <DemoCta role={role} />
         </div>
       </section>
     </div>

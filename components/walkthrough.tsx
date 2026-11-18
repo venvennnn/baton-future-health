@@ -2,6 +2,9 @@
 
 import { useDemo } from "@/components/providers";
 import { TOUR_UI, spotlightBox, tooltipPosition, tourSteps, type Box, type TourUi } from "@/lib/walkthrough";
+
+type TourCopy = Omit<TourUi, "offerBody"> & { offerBody: string };
+import type { Role } from "@/lib/session";
 import { usePathname, useRouter } from "next/navigation";
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 
@@ -37,22 +40,31 @@ function rememberHide() {
   }
 }
 
-export function WalkthroughProvider({ children }: { children: React.ReactNode }) {
+export function WalkthroughProvider({ role, children }: { role: Role | null; children: React.ReactNode }) {
   const { locale } = useDemo();
-  const steps = useMemo(() => tourSteps(locale), [locale]);
-  const ui = TOUR_UI[locale];
+  const steps = useMemo(() => (role ? tourSteps(locale, role) : []), [locale, role]);
+  const baseUi = TOUR_UI[locale];
+  const ui = role === "admin" ? { ...baseUi, offerBody: baseUi.offerBodyAdmin } : baseUi;
   const [running, setRunning] = useState(false);
   const [index, setIndex] = useState(0);
   const [offer, setOffer] = useState(false);
   const dismissed = useRef(false);
 
   useEffect(() => {
-    if (readHidden()) dismissed.current = true;
+    if (!role) {
+      setOffer(false);
+      setRunning(false);
+      return;
+    }
+    if (readHidden()) {
+      dismissed.current = true;
+      return;
+    }
     const id = window.setTimeout(() => {
       if (!dismissed.current) setOffer(true);
     }, 450);
     return () => window.clearTimeout(id);
-  }, []);
+  }, [role]);
 
   function hideOffer() {
     dismissed.current = true;
@@ -61,6 +73,7 @@ export function WalkthroughProvider({ children }: { children: React.ReactNode })
   }
 
   function start() {
+    if (!role) return;
     hideOffer();
     setIndex(0);
     setRunning(true);
@@ -77,7 +90,7 @@ export function WalkthroughProvider({ children }: { children: React.ReactNode })
     <WalkthroughContext.Provider value={api}>
       {children}
       {offer && !running ? <Offer ui={ui} onStart={start} onLater={hideOffer} /> : null}
-      {running ? <Tour index={index} steps={steps} ui={ui} onIndex={setIndex} onStop={stop} /> : null}
+      {running && steps.length > 0 ? <Tour index={index} steps={steps} ui={ui} onIndex={setIndex} onStop={stop} /> : null}
     </WalkthroughContext.Provider>
   );
 }
@@ -87,7 +100,7 @@ function Offer({
   onStart,
   onLater,
 }: {
-  ui: TourUi;
+  ui: TourCopy;
   onStart: () => void;
   onLater: () => void;
 }) {
@@ -120,7 +133,7 @@ function Tour({
 }: {
   index: number;
   steps: ReturnType<typeof tourSteps>;
-  ui: TourUi;
+  ui: TourCopy;
   onIndex: (index: number) => void;
   onStop: () => void;
 }) {
