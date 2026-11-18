@@ -1,5 +1,6 @@
 import { canAccess, roleForPath } from "@/lib/access";
-import { SESSION_COOKIE, readSessionToken, sessionCookieOptions, sessionSecret } from "@/lib/session";
+import { SESSION_COOKIE, readSessionToken, sessionCookieOptions } from "@/lib/session";
+import { sessionSecret } from "@/lib/session-secret";
 import { NextResponse, type NextRequest } from "next/server";
 
 function redirectTo(request: NextRequest, pathname: string, params: Record<string, string>) {
@@ -15,7 +16,7 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const secret = sessionSecret();
   const token = request.cookies.get(SESSION_COOKIE)?.value;
-  const session = secret && token ? await readSessionToken(token, secret) : null;
+  const session = token ? await readSessionToken(token, secret) : null;
   const invalidCookie = Boolean(token) && !session;
   const zone = roleForPath(pathname);
 

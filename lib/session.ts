@@ -4,8 +4,6 @@ export const SESSION_MAX_AGE_SECONDS = 60 * 60 * 8;
 /** Passwordless "Continue as User" may issue only this role. */
 export const USER_DEMO_ROLE = "user" as const;
 
-const DEV_SECRET = "baton-local-demo-session-secret-not-for-production";
-
 export type Role = "user" | "admin";
 
 export interface Session {
@@ -20,14 +18,6 @@ export const DEMO_ACCOUNTS: Record<Role, { username: string; password: string }>
 
 export function isRole(value: unknown): value is Role {
   return value === "user" || value === "admin";
-}
-
-/** Production requires BATON_SESSION_SECRET. Development falls back to a local-only secret. */
-export function sessionSecret(): string | null {
-  const value = process.env.BATON_SESSION_SECRET?.trim();
-  if (value && value.length >= 16) return value;
-  if (process.env.NODE_ENV === "production") return null;
-  return DEV_SECRET;
 }
 
 export function sessionCookieOptions(maxAge = SESSION_MAX_AGE_SECONDS) {

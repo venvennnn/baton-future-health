@@ -7,7 +7,7 @@ npm install
 cp .env.example .env.local
 ```
 
-Set `BATON_SESSION_SECRET` in `.env.local` to a random string of at least 16 characters. That value signs the demo session cookie and stays on the server. In development, if the variable is missing, the app uses a local-only fallback so `npm run dev` still starts. Production does not use that fallback: set the variable in the host environment or demo login cannot issue a session.
+Demo sign-in works without environment variables. The server signs the session cookie with a built-in demo key. Set `BATON_SESSION_SECRET` in `.env.local` to a random string of at least 16 characters when you want to override that key. The variable stays on the server.
 
 ```bash
 npm run dev

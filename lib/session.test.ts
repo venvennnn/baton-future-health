@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { DEMO_ACCOUNTS, USER_DEMO_ROLE, checkDemoCredentials, readSessionToken, signSession } from "./session";
+import { sessionSecret } from "./session-secret";
 import { loginFeedback } from "./login";
 
 const secret = "test-session-secret-value";
@@ -17,6 +18,24 @@ describe("session token", () => {
     expect(await readSessionToken(undefined, secret)).toBeNull();
     expect(await readSessionToken(token, "another-secret-value")).toBeNull();
     expect(await readSessionToken(token, secret, Date.parse("2026-01-02T00:00:00Z"))).toBeNull();
+  });
+});
+
+describe("session secret", () => {
+  it("uses a built-in key in production when the environment variable is unset", () => {
+    const env = process.env as Record<string, string | undefined>;
+    const previousNode = env.NODE_ENV;
+    const previousSecret = env.BATON_SESSION_SECRET;
+    env.NODE_ENV = "production";
+    delete env.BATON_SESSION_SECRET;
+    expect(sessionSecret().length).toBeGreaterThanOrEqual(16);
+    env.BATON_SESSION_SECRET = "deployed-session-secret";
+    expect(sessionSecret()).toBe("deployed-session-secret");
+    env.BATON_SESSION_SECRET = "too-short";
+    expect(sessionSecret()).not.toBe("too-short");
+    env.NODE_ENV = previousNode;
+    if (previousSecret === undefined) delete process.env.BATON_SESSION_SECRET;
+    else process.env.BATON_SESSION_SECRET = previousSecret;
   });
 });
 

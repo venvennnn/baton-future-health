@@ -11,14 +11,12 @@ const TEXT = {
     username: "Enter the username.",
     password: "Enter the password.",
     mismatch: "Those credentials do not match this demo role.",
-    unconfigured: "Demo sign-in is not configured on this server.",
     switch: "You are signed in with a different demo role. Log out before switching.",
   },
   ar: {
     username: "أدخل اسم المستخدم.",
     password: "أدخل كلمة المرور.",
     mismatch: "بيانات الدخول لا تطابق دور العرض هذا.",
-    unconfigured: "تسجيل الدخول التجريبي غير مُعد على هذا الخادم.",
     switch: "أنت مسجّل بدور تجريبي مختلف. سجّل الخروج قبل التبديل.",
   },
 } as const;
@@ -41,6 +39,6 @@ export function loginFeedback(input: { role: Role; username: string; password: s
   return null;
 }
 
-export function loginMessage(locale: "en" | "ar", key: "unconfigured" | "switch"): string {
+export function loginMessage(locale: "en" | "ar", key: "switch"): string {
   return TEXT[locale][key];
 }
