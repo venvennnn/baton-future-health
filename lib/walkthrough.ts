@@ -240,7 +240,7 @@ const NAV_COPY: Record<"en" | "ar", Record<"user" | "admin", StepCopy>> = {
     },
     admin: {
       title: "Overview, waits, and policy",
-      body: "Overview, facility waits, the policy simulator, and the governance notes. Case records open from a User session.",
+      body: "Overview, facility waits, the policy simulator, governance, and illness settings. Case records open from a User session.",
     },
   },
   ar: {
@@ -250,7 +250,7 @@ const NAV_COPY: Record<"en" | "ar", Record<"user" | "admin", StepCopy>> = {
     },
     admin: {
       title: "النظرة العامة والانتظار والسياسة",
-      body: "النظرة العامة وانتظار المنشآت ومحاكي السياسة وملاحظات الحوكمة. سجلات الحالات تُفتح من جلسة المستخدم.",
+      body: "النظرة العامة وانتظار المنشآت ومحاكي السياسة والحوكمة وإعدادات الأمراض. سجلات الحالات تُفتح من جلسة المستخدم.",
     },
   },
 };
