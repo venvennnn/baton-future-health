@@ -24,4 +24,4 @@ Demo credentials, for synthetic data only:
 | User | `user` | `password` | `/cases` |
 | Admin | `admin` | `password` | `/facilities` |
 
-"Continue as User" on the overview starts the User session without the form. Admin access always uses the login form. The Log In menu opens that form as User or as Admin. A User session can open the overview, the case board, and case records. An Admin session can open the overview, facilities, the policy simulator, governance, and illness settings. The header names the illness being shown. Only colorectal screening (FIT) has cases in the synthetic file. Other illness requirements stay in the browser.
+"Continue as User" on the overview starts the User session without the form. Admin access always uses the login form. The Log In menu opens that form as User or as Admin. A User session can open the overview, the case board, and case records. An Admin session can open the overview, facilities, capacity planning, governance, and illness settings. The header names the illness being shown. Only colorectal screening (FIT) has cases in the synthetic file. Other illness requirements stay in the browser.

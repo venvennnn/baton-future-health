@@ -94,7 +94,7 @@ export function Overview({ role }: { role: Role | null }) {
           <Door href={entryHref(role, "/cases")} kicker="Case Board" kickerClass="border-blue-200 bg-blue-50 text-blue-800" title="Know who owns the next step" body="Daily worklist sorted by how long the case has been waiting." />
           <Door href={entryHref(role, "/cases/FIT-26771")} kicker="Case Record" kickerClass="border-amber-200 bg-amber-50 text-amber-800" title="Readiness, SBAR and hard lock" body="Checklist, e-consult, modesty routing and pathology-gated closure." />
           <Door href={entryHref(role, "/facilities")} kicker="Facilities" kickerClass="border-blue-200 bg-blue-50 text-blue-800" title="See where follow-up is waiting" body="Stage latency and a slider to project a quieter queue." />
-          <Door href={entryHref(role, "/simulator")} kicker="Policy Simulator" kickerClass="border-emerald-200 bg-emerald-50 text-emerald-700" title="Equity vs. completion" body="Move interpreter priority along a teaching curve." />
+          <Door href={entryHref(role, "/simulator")} kicker="Capacity planning" kickerClass="border-emerald-200 bg-emerald-50 text-emerald-700" title="Equity vs. completion" body="Move interpreter priority along a teaching curve." />
         </div>
       </section>
 

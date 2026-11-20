@@ -162,7 +162,7 @@ export function HomeFlow() {
             Open case board <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
           </Link>
           <Link href="/simulator" className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-100 px-5 py-2.5 text-sm font-bold">
-            Explore policy simulator <span className="material-symbols-outlined text-[18px] text-blue-700">tune</span>
+            Explore capacity planning <span className="material-symbols-outlined text-[18px] text-blue-700">tune</span>
           </Link>
         </div>
       </div>
@@ -227,7 +227,7 @@ function PatternCard({
       <div key={leak} className="overflow-hidden rounded-2xl border border-slate-100 bg-slate-50/70 px-2 py-3">
         <FlowChart prefix={prefix} nodes={nodes} />
       </div>
-      <p className="mt-4 border-t border-slate-100 pt-3 text-xs text-slate-500">These four numbers are an example picture. They do not change the case file or the simulator.</p>
+      <p className="mt-4 border-t border-slate-100 pt-3 text-xs text-slate-500">These four numbers are an example picture. They do not change the case file or capacity planning.</p>
     </article>
   );
 }
