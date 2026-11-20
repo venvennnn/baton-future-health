@@ -83,7 +83,7 @@ export function SimulatorView() {
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
         <div className="max-w-2xl">
           <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-blue-800">Seeded model · n={cohort.length.toLocaleString()}</span>
-          <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-slate-950">Policy Simulator — screening pathway</h1>
+          <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-slate-950">Capacity planning — screening pathway</h1>
           <p className="mt-1 text-sm text-slate-700">Figures below are model output on synthetic data, or a labeled teaching curve. They are not a Department of Health result.</p>
         </div>
         <div className="flex flex-wrap gap-2">

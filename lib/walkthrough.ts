@@ -45,7 +45,7 @@ const COPY: Record<"en" | "ar", Record<TourStepId, StepCopy>> = {
     },
     nav: {
       title: "Five places, one case file",
-      body: "Overview, the case board, facility waits, the policy simulator, and the governance notes read the same synthetic cases. A case record opens from the board.",
+      body: "Overview, the case board, facility waits, capacity planning, and the governance notes read the same synthetic cases. A case record opens from the board.",
     },
     hero: {
       title: "Follow up, hand over, close the loop",
@@ -123,7 +123,7 @@ const COPY: Record<"en" | "ar", Record<TourStepId, StepCopy>> = {
     },
     nav: {
       title: "خمسة مواضع وملف حالات واحد",
-      body: "النظرة العامة ولوحة الحالات وانتظار المنشآت ومحاكي السياسة وملاحظات الحوكمة تقرأ الحالات المصطنعة نفسها. سجل الحالة يُفتح من اللوحة.",
+      body: "النظرة العامة ولوحة الحالات وانتظار المنشآت وتخطيط السعة وملاحظات الحوكمة تقرأ الحالات المصطنعة نفسها. سجل الحالة يُفتح من اللوحة.",
     },
     hero: {
       title: "تابع، سلّم، وأغلق المسار",
@@ -202,7 +202,7 @@ export const TOUR_UI = {
     offerKicker: "New here",
     offerTitle: "Take the walkthrough",
     offerBody: "A short tour of the overview, the case board, and a case record.",
-    offerBodyAdmin: "A short tour of the overview, facility waits, the simulator, and governance.",
+    offerBodyAdmin: "A short tour of the overview, facility waits, capacity planning, and governance.",
     start: "Start walkthrough",
     later: "Not now",
     skip: "Skip",
@@ -216,7 +216,7 @@ export const TOUR_UI = {
     offerKicker: "أول زيارة",
     offerTitle: "ابدأ الجولة",
     offerBody: "جولة قصيرة في النظرة العامة ولوحة الحالات وسجل الحالة.",
-    offerBodyAdmin: "جولة قصيرة في النظرة العامة وانتظار المنشآت والمحاكي والحوكمة.",
+    offerBodyAdmin: "جولة قصيرة في النظرة العامة وانتظار المنشآت وتخطيط السعة والحوكمة.",
     start: "ابدأ الجولة",
     later: "ليس الآن",
     skip: "تخطي",
@@ -240,7 +240,7 @@ const NAV_COPY: Record<"en" | "ar", Record<"user" | "admin", StepCopy>> = {
     },
     admin: {
       title: "Overview, waits, and policy",
-      body: "Overview, facility waits, the policy simulator, governance, and illness settings. Case records open from a User session.",
+      body: "Overview, facility waits, capacity planning, governance, and illness settings. Case records open from a User session.",
     },
   },
   ar: {
@@ -250,7 +250,7 @@ const NAV_COPY: Record<"en" | "ar", Record<"user" | "admin", StepCopy>> = {
     },
     admin: {
       title: "النظرة العامة والانتظار والسياسة",
-      body: "النظرة العامة وانتظار المنشآت ومحاكي السياسة والحوكمة وإعدادات الأمراض. سجلات الحالات تُفتح من جلسة المستخدم.",
+      body: "النظرة العامة وانتظار المنشآت وتخطيط السعة والحوكمة وإعدادات الأمراض. سجلات الحالات تُفتح من جلسة المستخدم.",
     },
   },
 };

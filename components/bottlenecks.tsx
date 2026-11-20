@@ -252,7 +252,7 @@ export function Bottlenecks() {
           </div>
           <div className="flex gap-2">
             <Link href={entryHref("admin", "/cases")} className="rounded-full bg-blue-700 px-4 py-2 text-sm font-bold text-white">Open case board</Link>
-            <Link href="/simulator" className="rounded-full border px-4 py-2 text-sm font-bold">Policy simulator</Link>
+            <Link href="/simulator" className="rounded-full border px-4 py-2 text-sm font-bold">Capacity planning</Link>
           </div>
         </div>
         <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
