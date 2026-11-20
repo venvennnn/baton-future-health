@@ -214,8 +214,66 @@ export function HeroActions({ role }: { role: Role | null }) {
     <div className="mb-3 flex flex-wrap items-center justify-center gap-3">
       <RoleChooserButton role={role} label="Open demo" className={primary} />
       <a href="#pathway" className={secondary}>Explore the pathway</a>
-      <Link href="/login?role=user" className={blue}>Login as User</Link>
-      <Link href="/login?role=admin" className={secondary}>Login as Admin</Link>
+      <LoginMenu className={blue} />
+    </div>
+  );
+}
+
+function LoginMenu({ className }: { className: string }) {
+  const { locale } = useDemo();
+  const [open, setOpen] = useState(false);
+  const root = useRef<HTMLDivElement>(null);
+  const button = useRef<HTMLButtonElement>(null);
+  const label = locale === "ar" ? "دخول" : "Log In";
+  const asUser = locale === "ar" ? "كمستخدم" : "As user";
+  const asAdmin = locale === "ar" ? "كمسؤول" : "As admin";
+
+  const close = useCallback((focusButton = false) => {
+    setOpen(false);
+    if (focusButton) button.current?.focus();
+  }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    function onKey(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        close(true);
+      }
+    }
+    function onPointer(event: MouseEvent) {
+      if (!root.current?.contains(event.target as Node)) close(false);
+    }
+    document.addEventListener("keydown", onKey);
+    document.addEventListener("mousedown", onPointer);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.removeEventListener("mousedown", onPointer);
+    };
+  }, [open, close]);
+
+  return (
+    <div ref={root} className="relative">
+      <button
+        ref={button}
+        type="button"
+        className={className}
+        aria-expanded={open}
+        aria-haspopup="menu"
+        onClick={() => setOpen((current) => !current)}
+      >
+        {label}
+      </button>
+      {open ? (
+        <div role="menu" aria-label={label} className="absolute left-1/2 z-30 mt-2 w-40 -translate-x-1/2 overflow-hidden rounded-2xl border border-slate-200 bg-white py-1 text-left shadow-card">
+          <Link role="menuitem" href="/login?role=user" className={`block px-4 py-2.5 text-sm font-semibold text-slate-900 hover:bg-blue-50 ${focus}`} onClick={() => setOpen(false)}>
+            {asUser}
+          </Link>
+          <Link role="menuitem" href="/login?role=admin" className={`block px-4 py-2.5 text-sm font-semibold text-slate-900 hover:bg-blue-50 ${focus}`} onClick={() => setOpen(false)}>
+            {asAdmin}
+          </Link>
+        </div>
+      ) : null}
     </div>
   );
 }

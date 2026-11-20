@@ -5,6 +5,7 @@ import { kpis } from "@/lib/analytics";
 import { entryHref } from "@/lib/access";
 import { logout } from "@/app/login/actions";
 import { useDemo } from "@/components/providers";
+import { CASE_FILE_ILLNESS_ID } from "@/lib/illnesses";
 import { useWalkthrough } from "@/components/walkthrough";
 import type { Role } from "@/lib/session";
 import Image from "next/image";
@@ -20,6 +21,9 @@ const COPY = {
     facilities: "Facilities",
     simulator: "Policy Simulator",
     governance: "Governance",
+    settings: "Settings",
+    showing: "Showing",
+    fileNote: "This demo's case file is colorectal screening (FIT).",
     overdue: "Overdue",
     user: "User",
     admin: "Admin",
@@ -35,6 +39,9 @@ const COPY = {
     facilities: "المنشآت",
     simulator: "محاكي السياسة",
     governance: "الحوكمة",
+    settings: "الإعدادات",
+    showing: "يُعرض",
+    fileNote: "ملف الحالات في هذا العرض هو فحص القولون (FIT).",
     overdue: "متأخر",
     user: "مستخدم",
     admin: "مسؤول",
@@ -47,7 +54,7 @@ const COPY = {
 
 export function Shell({ role, children }: { role: Role | null; children: React.ReactNode }) {
   const pathname = usePathname();
-  const { cases, locale, setLocale } = useDemo();
+  const { cases, locale, setLocale, activeIllness } = useDemo();
   const tour = useWalkthrough();
   const text = COPY[locale];
   const overdue = kpis(cases).overdue;
@@ -62,6 +69,7 @@ export function Shell({ role, children }: { role: Role | null; children: React.R
           { href: "/facilities", label: text.facilities },
           { href: "/simulator", label: text.simulator },
           { href: "/governance", label: text.governance },
+          { href: "/settings", label: text.settings },
         ]
       : [];
 
@@ -113,6 +121,14 @@ export function Shell({ role, children }: { role: Role | null; children: React.R
             <button type="button" className="rounded-lg px-2 py-2 text-xs font-semibold text-slate-600 hover:text-slate-900" onClick={() => setLocale(locale === "en" ? "ar" : "en")}>
               {locale === "en" ? "عربي" : "EN"}
             </button>
+          </div>
+        </div>
+        <div className="border-t border-slate-200/80">
+          <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-2 text-sm sm:px-6 lg:px-8">
+            <p className="text-slate-800">
+              <span className="font-semibold text-slate-950">{text.showing}</span> {activeIllness.name} · {activeIllness.test}
+              {activeIllness.id === CASE_FILE_ILLNESS_ID ? null : <span className="mt-0.5 block text-xs font-normal text-slate-600">{text.fileNote}</span>}
+            </p>
           </div>
         </div>
       </header>

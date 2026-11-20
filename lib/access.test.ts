@@ -8,6 +8,9 @@ describe("route access", () => {
     expect(roleForPath("/facilities")).toBe("admin");
     expect(roleForPath("/simulator")).toBe("admin");
     expect(roleForPath("/governance")).toBe("admin");
+    expect(roleForPath("/settings")).toBe("admin");
+    expect(canAccess("user", "/settings")).toBe(false);
+    expect(canAccess("admin", "/settings")).toBe(true);
     expect(roleForPath("/")).toBe("public");
     expect(roleForPath("/login")).toBe("public");
     expect(canAccess("user", "/cases/FIT-26771")).toBe(true);

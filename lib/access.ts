@@ -9,7 +9,7 @@ export function roleHome(role: Role): "/cases" | "/facilities" {
 export function roleForPath(pathname: string): Zone {
   if (pathname === "/" || pathname === "/login") return "public";
   if (pathname === "/cases" || /^\/cases\/[A-Za-z0-9-]+$/.test(pathname)) return "user";
-  if (pathname === "/facilities" || pathname === "/simulator" || pathname === "/governance") return "admin";
+  if (pathname === "/facilities" || pathname === "/simulator" || pathname === "/governance" || pathname === "/settings") return "admin";
   return "unknown";
 }
 

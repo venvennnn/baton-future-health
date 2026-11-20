@@ -6,6 +6,7 @@ import { daysSinceResult, destinationOptions, filterCases, isHighStall, isOverdu
 import { formatDays } from "@/lib/dates";
 import { facilityShort } from "@/lib/facilities";
 import { DEMO_CASE_ID } from "@/lib/cases";
+import { CASE_FILE_ILLNESS_ID } from "@/lib/illnesses";
 import { HANDOVER_LABEL, STAGE_LABEL, STAGE_ORDER, type ScreeningCase, type Stage } from "@/lib/types";
 import Link from "next/link";
 import { useMemo, useState } from "react";
@@ -16,7 +17,7 @@ function handoverText(item: ScreeningCase): string {
 }
 
 export function CaseBoard() {
-  const { cases, clinicId, recordSimulatedHandover, recordSimulatedOutreach } = useDemo();
+  const { cases, clinicId, recordSimulatedHandover, recordSimulatedOutreach, activeIllness } = useDemo();
   const [stage, setStage] = useState<Stage | "all">("all");
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState(DEMO_CASE_ID);
@@ -35,6 +36,22 @@ export function CaseBoard() {
   const selected = filtered.find((item) => item.id === selectedId) ?? filtered[0];
   const options = selected ? destinationOptions(selected, cases) : [];
   const recommended = options.find((option) => !option.rejected) ?? options[0];
+
+  if (activeIllness.id !== CASE_FILE_ILLNESS_ID) {
+    return (
+      <main className="page-rise mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 py-8 sm:px-6 lg:px-8">
+        <h1 className="text-3xl font-extrabold tracking-tight text-slate-950">Case Board</h1>
+        <p className="text-sm leading-relaxed text-slate-800">
+          Showing {activeIllness.name} · {activeIllness.test}. This synthetic file has no cases for that illness. The FIT worklist is available when colorectal screening is showing.
+        </p>
+        <ul className="space-y-2">
+          {activeIllness.requirements.map((row) => (
+            <li key={row.id} className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800">{row.text}</li>
+          ))}
+        </ul>
+      </main>
+    );
+  }
 
   return (
     <main className="page-rise mx-auto flex w-full max-w-7xl flex-col gap-5 px-4 py-8 sm:px-6 lg:px-8">
