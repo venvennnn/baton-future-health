@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { POST } from "../app/api/draft/route";
 import { CASES, getCase } from "./cases";
 import { caseFacts, draftApprovalDetail, draftApprovalEvent, draftPrompt, templateDraft } from "./draft";
+import { DEFAULT_DRAFT_MODEL } from "./draft-model";
 import { SESSION_COOKIE, signSession } from "./session";
 import { sessionSecret } from "./session-secret";
 
@@ -18,7 +19,10 @@ async function call(role: "user" | "admin" | null) {
 describe("draft route", () => {
   it("rejects anonymous and admin sessions and returns a template without a key", async () => {
     delete process.env.LLM_API_KEY;
+    delete process.env.GEMINI_API_KEY;
+    delete process.env.GOOGLE_API_KEY;
     delete process.env.ANTHROPIC_API_KEY;
+    expect(DEFAULT_DRAFT_MODEL).toBe("gemini-3.8-flash");
     expect((await call(null)).status).toBe(401);
     expect((await call("admin")).status).toBe(403);
     const response = await call("user");

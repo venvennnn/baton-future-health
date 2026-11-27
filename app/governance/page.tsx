@@ -2,6 +2,7 @@ import { DemoSessionAudit } from "@/components/demo-audit";
 import { entryHref } from "@/lib/access";
 import { getCase } from "@/lib/cases";
 import { requireRole } from "@/lib/guard";
+import { DEFAULT_DRAFT_MODEL } from "@/lib/draft-model";
 import { MODEL_CARD, RISK_WEIGHTS } from "@/lib/risk";
 import Link from "next/link";
 
@@ -75,7 +76,7 @@ export default async function GovernancePage() {
         <ul className="mt-2 list-disc space-y-1 pl-5">
           <li>The case record can draft an SBAR note and an English or Arabic teach-back message.</li>
           <li>A clinician reviews the draft and must approve it before it is saved. Nothing is sent to a patient or another system.</li>
-          <li>Only the synthetic case record is sent to the model. If no model key is configured, a template built from those same fields is used.</li>
+          <li>Drafts call Gemini ({DEFAULT_DRAFT_MODEL}) when GEMINI_API_KEY is set. Only the synthetic case record is sent. If the key is missing, or the call times out, a template built from those same fields is used.</li>
           <li>In production this would run on an approved in-region deployment (for example via the challenge&apos;s cloud partners) with no PHI leaving the jurisdiction.</li>
           <li>Handovers recovered in Capacity planning are the Kaplan–Meier colonoscopy rate at day 180 minus usual care (6 calls/day, first come first served, no extra slots, teach-back off), times 1,000. The paper-scale line uses the same difference times 1,429 and stops at 585. This is a synthetic cohort simulation, not a forecast.</li>
         </ul>
