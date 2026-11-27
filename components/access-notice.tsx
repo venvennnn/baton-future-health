@@ -7,12 +7,12 @@ import { useSearchParams } from "next/navigation";
 const COPY = {
   en: {
     admin: "Admin access required.",
-    user: "The case workspace requires User access. Log out and choose the User demo to open it.",
+    user: "The case workspace requires Clinician access. Log out and choose the Clinician demo to open it.",
     logout: "Logout",
   },
   ar: {
     admin: "يلزم دخول المسؤول.",
-    user: "مساحة الحالات تحتاج دخول المستخدم. سجّل الخروج واختر عرض المستخدم لفتحها.",
+    user: "مساحة الحالات تحتاج دخول الفريق السريري. سجّل الخروج واختر عرض الفريق السريري لفتحها.",
     logout: "خروج",
   },
 } as const;

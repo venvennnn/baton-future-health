@@ -131,6 +131,8 @@ export interface ScreeningCase {
   outreach: OutreachTouch[];
   sbar: Sbar;
   simulatedPending?: boolean;
+  /** Browser-only story clock for the pitch case. Absent on the shared file. */
+  demoDay?: number;
 }
 
 export const STAGE_ORDER: Stage[] = [

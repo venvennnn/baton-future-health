@@ -1,9 +1,10 @@
 "use client";
 
-import { CASES } from "@/lib/cases";
+import { CASES, DEMO_CASE_ID } from "@/lib/cases";
+import { addDays } from "@/lib/dates";
 import { facilityName } from "@/lib/facilities";
 import { CASE_FILE_ILLNESS_ID, activeIllness, defaultIllnesses, normalizeIllnesses, type IllnessProgramme } from "@/lib/illnesses";
-import type { CaseEvent, HandoverStatus, OutreachTouch, ScreeningCase } from "@/lib/types";
+import type { CaseEvent, HandoverStatus, OutreachTouch, ScreeningCase, Stage } from "@/lib/types";
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
 const STORAGE_KEY = "baton-demo-overrides-v1";
@@ -16,6 +17,13 @@ interface Override {
   simulatedPending?: boolean;
   events: CaseEvent[];
   outreach: OutreachTouch[];
+  demoDay?: number;
+  procedureAttended?: boolean;
+  reportReceived?: boolean;
+  dispositionRecorded?: boolean;
+  closed?: boolean;
+  stage?: Stage;
+  closurePendingReason?: string;
 }
 
 interface Store {
@@ -25,6 +33,9 @@ interface Store {
   locale: "en" | "ar";
   setLocale: (locale: "en" | "ar") => void;
   recordSimulatedHandover: (caseId: string, facilityId: string) => void;
+  recordColonoscopyAttended: (caseId: string) => void;
+  recordDemoClosure: (caseId: string, detail: string) => void;
+  resetDemoCase: (caseId: string) => void;
   recordSimulatedOutreach: (caseId: string, channel: OutreachTouch["channel"], note: string) => void;
   recordNote: (caseId: string, note: string) => void;
   illnesses: IllnessProgramme[];
@@ -41,6 +52,7 @@ const CaseStore = createContext<Store | null>(null);
 
 function merge(base: ScreeningCase, override?: Override): ScreeningCase {
   if (!override) return base;
+  const closed = override.closed ?? base.closed;
   return {
     ...base,
     handoverStatus: override.handoverStatus ?? base.handoverStatus,
@@ -49,7 +61,30 @@ function merge(base: ScreeningCase, override?: Override): ScreeningCase {
     simulatedPending: override.simulatedPending ?? base.simulatedPending,
     events: [...base.events, ...override.events].sort((a, b) => a.on.localeCompare(b.on) || a.id.localeCompare(b.id)),
     outreach: [...base.outreach, ...override.outreach],
+    demoDay: override.demoDay,
+    procedureAttended: override.procedureAttended ?? base.procedureAttended,
+    reportReceived: override.reportReceived ?? base.reportReceived,
+    dispositionRecorded: override.dispositionRecorded ?? base.dispositionRecorded,
+    closed,
+    stage: override.stage ?? base.stage,
+    closurePendingReason: closed ? undefined : (override.closurePendingReason ?? base.closurePendingReason),
   };
+}
+
+function carried(current: Override | undefined) {
+  return {
+    demoDay: current?.demoDay,
+    procedureAttended: current?.procedureAttended,
+    reportReceived: current?.reportReceived,
+    dispositionRecorded: current?.dispositionRecorded,
+    closed: current?.closed,
+    stage: current?.stage,
+    closurePendingReason: current?.closurePendingReason,
+  };
+}
+
+function storyOn(item: ScreeningCase, day: number): string {
+  return addDays(item.resultOn, day);
 }
 
 function todayStamp(): string {
@@ -113,25 +148,121 @@ export function Providers({ children }: { children: React.ReactNode }) {
     locale,
     setLocale,
     recordSimulatedHandover: (caseId, facilityId) => {
-      patch(caseId, (current) => {
+      patch(caseId, (current, item) => {
+        const pitch = caseId === DEMO_CASE_ID;
         const event: CaseEvent = {
           id: `${caseId}-sim-ho-${Date.now()}`,
-          on: todayStamp(),
+          on: pitch ? storyOn(item, 3) : todayStamp(),
           kind: "simulated",
           simulated: true,
           label: "Simulated handover request",
           detail: `Recorded locally for ${facilityName(facilityId)}. No referral was transmitted.`,
-          actor: "Demo user",
+          actor: pitch ? "Clinician" : "Demo user",
           facilityId,
         };
         return {
+          ...carried(current),
           events: [...(current?.events ?? []), event],
           outreach: current?.outreach ?? [],
           handoverStatus: "pending_acceptance",
           endoscopyFacilityId: facilityId,
           simulatedPending: true,
           nextAction: `Simulated request is waiting in this browser for ${facilityName(facilityId)}. It has not been sent.`,
+          ...(pitch ? { demoDay: 3 } : {}),
         };
+      });
+    },
+    recordColonoscopyAttended: (caseId) => {
+      if (caseId !== DEMO_CASE_ID) return;
+      patch(caseId, (current, item) => {
+        if (current?.procedureAttended) return { ...carried(current), events: current.events, outreach: current.outreach, handoverStatus: current.handoverStatus, endoscopyFacilityId: current.endoscopyFacilityId, simulatedPending: current.simulatedPending, nextAction: current.nextAction };
+        const event: CaseEvent = {
+          id: `${caseId}-sim-proc`,
+          on: storyOn(item, 12),
+          kind: "procedure",
+          simulated: true,
+          label: "Colonoscopy attended (simulated)",
+          detail: "Attendance recorded in this browser. Nothing was sent. Attendance does not close the case.",
+          actor: "Clinician",
+          facilityId: current?.endoscopyFacilityId,
+        };
+        return {
+          ...carried(current),
+          events: [...(current?.events ?? []), event],
+          outreach: current?.outreach ?? [],
+          handoverStatus: current?.handoverStatus,
+          endoscopyFacilityId: current?.endoscopyFacilityId,
+          simulatedPending: current?.simulatedPending,
+          procedureAttended: true,
+          stage: "pathology",
+          demoDay: 12,
+          closurePendingReason: "Procedure attended. Report is outstanding, so closure stays pending.",
+          nextAction: "Record the biopsy result and a disposition. Attendance alone does not close the case. Nothing has been sent.",
+        };
+      });
+    },
+    recordDemoClosure: (caseId, detail) => {
+      if (caseId !== DEMO_CASE_ID) return;
+      patch(caseId, (current, item) => {
+        if (current?.closed) return { ...carried(current), events: current.events, outreach: current.outreach, handoverStatus: current.handoverStatus, endoscopyFacilityId: current.endoscopyFacilityId, simulatedPending: current.simulatedPending, nextAction: current.nextAction };
+        const on = storyOn(item, 16);
+        const facilityId = current?.endoscopyFacilityId;
+        const events: CaseEvent[] = [
+          ...(current?.events ?? []),
+          {
+            id: `${caseId}-sim-report`,
+            on,
+            kind: "report",
+            simulated: true,
+            label: "Procedure report recorded (simulated)",
+            detail: "Synthetic report recorded in this browser. Nothing was sent.",
+            actor: "Clinician",
+            facilityId,
+          },
+          {
+            id: `${caseId}-sim-disp`,
+            on,
+            kind: "disposition",
+            simulated: true,
+            label: "Disposition recorded (simulated)",
+            detail,
+            actor: "Clinician",
+            facilityId,
+          },
+          {
+            id: `${caseId}-sim-close`,
+            on,
+            kind: "closure",
+            simulated: true,
+            label: "Documented closure (simulated)",
+            detail: "Closed in this browser on Day 16 because attendance, the report, and a disposition are recorded. The shared case file was not changed, and nothing was sent.",
+            actor: "Clinician",
+            facilityId,
+          },
+        ];
+        return {
+          ...carried(current),
+          events,
+          outreach: current?.outreach ?? [],
+          handoverStatus: current?.handoverStatus,
+          endoscopyFacilityId: facilityId,
+          simulatedPending: current?.simulatedPending,
+          procedureAttended: true,
+          reportReceived: true,
+          dispositionRecorded: true,
+          closed: true,
+          stage: "closed",
+          demoDay: 16,
+          nextAction: "No open action in this browser. Closed on Day 16. Nothing was sent.",
+        };
+      });
+    },
+    resetDemoCase: (caseId) => {
+      setOverrides((current) => {
+        if (!current[caseId]) return current;
+        const next = { ...current };
+        delete next[caseId];
+        return next;
       });
     },
     recordSimulatedOutreach: (caseId, channel, note) => {
@@ -155,6 +286,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
           actor: "Demo user",
         };
         return {
+          ...carried(current),
           events: [...(current?.events ?? []), event],
           outreach: [...(current?.outreach ?? []), touch],
           handoverStatus: current?.handoverStatus,
@@ -212,6 +344,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       const text = note.trim();
       if (!text) return;
       patch(caseId, (current) => ({
+        ...carried(current),
         events: [
           ...(current?.events ?? []),
           {

@@ -11,30 +11,30 @@ const focus = "focus-visible:outline focus-visible:outline-2 focus-visible:outli
 const COPY = {
   en: {
     title: "How would you like to try Baton?",
-    body: "Continue as User starts a demo session and opens the Case Board. Continue as Admin opens the login form.",
-    user: "Continue as User",
+    body: "Continue as Clinician starts a demo session and opens the Case Board. Continue as Admin opens the login form.",
+    user: "Continue as Clinician",
     userHint: "No password. Opens the Case Board.",
     admin: "Continue as Admin",
     adminHint: "Sign in with the Admin demo, then open Facilities.",
     close: "Close",
     back: "Back",
-    userSwitch: "You're signed in as Admin. The case workspace requires User access. Log out to continue as User.",
-    adminSwitch: "You're signed in as User. Facilities, capacity planning, and governance need an Admin session. Log out, then use the Admin login.",
-    confirmUser: "Log out and continue as User",
+    userSwitch: "You're signed in as Admin. The case workspace requires Clinician access. Log out to continue as Clinician.",
+    adminSwitch: "You're signed in as Clinician. Facilities, capacity planning, and governance need an Admin session. Log out, then use the Admin login.",
+    confirmUser: "Log out and continue as Clinician",
     confirmAdmin: "Log out and continue as Admin",
   },
   ar: {
     title: "كيف تريد تجربة باتون؟",
-    body: "المتابعة كمستخدم تبدأ جلسة تجريبية وتفتح لوحة الحالات. المتابعة كمسؤول تفتح نموذج الدخول.",
-    user: "المتابعة كمستخدم",
+    body: "المتابعة كالفريق السريري تبدأ جلسة تجريبية وتفتح لوحة الحالات. المتابعة كمسؤول تفتح نموذج الدخول.",
+    user: "المتابعة كالفريق السريري",
     userHint: "بدون كلمة مرور. تفتح لوحة الحالات.",
     admin: "المتابعة كمسؤول",
     adminHint: "سجّل الدخول بعرض المسؤول، ثم تُفتح المنشآت.",
     close: "إغلاق",
     back: "رجوع",
-    userSwitch: "أنت مسجّل كمسؤول. مساحة الحالات تحتاج دخول المستخدم. سجّل الخروج للمتابعة كمستخدم.",
-    adminSwitch: "أنت مسجّل كمستخدم. المنشآت وتخطيط السعة والحوكمة تحتاج جلسة مسؤول. سجّل الخروج ثم استخدم دخول المسؤول.",
-    confirmUser: "سجّل الخروج وتابع كمستخدم",
+    userSwitch: "أنت مسجّل كمسؤول. مساحة الحالات تحتاج دخول الفريق السريري. سجّل الخروج للمتابعة كالفريق السريري.",
+    adminSwitch: "أنت مسجّل كالفريق السريري. المنشآت وتخطيط السعة والحوكمة تحتاج جلسة مسؤول. سجّل الخروج ثم استخدم دخول المسؤول.",
+    confirmUser: "سجّل الخروج وتابع كالفريق السريري",
     confirmAdmin: "سجّل الخروج وتابع كمسؤول",
   },
 } as const;
@@ -62,7 +62,7 @@ export function SwitchRolePanel({ from, to, next }: { from: Role; to: Role; next
           </button>
         </form>
       )}
-      <p className="text-xs text-slate-500">{from === "user" ? "User" : "Admin"} → {to === "user" ? "User" : "Admin"}</p>
+      <p className="text-xs text-slate-500">{from === "user" ? "Clinician" : "Admin"} → {to === "user" ? "Clinician" : "Admin"}</p>
     </div>
   );
 }
@@ -225,7 +225,7 @@ function LoginMenu({ className }: { className: string }) {
   const root = useRef<HTMLDivElement>(null);
   const button = useRef<HTMLButtonElement>(null);
   const label = locale === "ar" ? "دخول" : "Log In";
-  const asUser = locale === "ar" ? "كمستخدم" : "As user";
+  const asUser = locale === "ar" ? "كالفريق السريري" : "As clinician";
   const asAdmin = locale === "ar" ? "كمسؤول" : "As admin";
 
   const close = useCallback((focusButton = false) => {

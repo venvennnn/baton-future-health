@@ -1,6 +1,7 @@
 "use client";
 
 import { paretoCurve, paretoPoint } from "@/lib/coordination";
+import { DEMO_CASE_ID } from "@/lib/cases";
 import type { ScreeningCase } from "@/lib/types";
 import { useEffect, useId, useMemo, useState } from "react";
 
@@ -10,8 +11,10 @@ const CHECKS = [
   { id: "sedation", label: "ASA sedation risk score", detail: "Cardiac and sedation risk are reviewed before a simulated handover." },
 ] as const;
 
-export function ReadinessGate({ onReady }: { onReady: (ready: boolean) => void }) {
-  const [checked, setChecked] = useState<Record<string, boolean>>({ egfr: true, hold: true, sedation: false });
+export function ReadinessGate({ caseId, onReady }: { caseId: string; onReady: (ready: boolean) => void }) {
+  const [checked, setChecked] = useState<Record<string, boolean>>(() => (
+    caseId === DEMO_CASE_ID ? { egfr: false, hold: true, sedation: true } : { egfr: true, hold: true, sedation: false }
+  ));
   const done = CHECKS.filter((item) => checked[item.id]).length;
   const ready = done === CHECKS.length;
 
@@ -159,9 +162,28 @@ export function PathologyLock({ item, onRecord }: { item: ScreeningCase; onRecor
       </div>
 
       {item.closed ? (
-        <p className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-900">This case is already closed in the shared file. The lock is not offered again.</p>
+        <p className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-900">
+          {typeof item.demoDay === "number" ? `Closed on Day ${item.demoDay}. The note stays in this browser. Nothing was sent.` : "This case is already closed in the shared file. The lock is not offered again."}
+        </p>
       ) : (
         <div className="mt-4 flex flex-col gap-3">
+          {item.id === DEMO_CASE_ID ? (
+            <div className="flex flex-wrap gap-2">
+              {["Tubular adenoma", "Hyperplastic polyp"].map((name) => (
+                <button
+                  key={name}
+                  type="button"
+                  className={`rounded-full border px-3 py-1.5 text-xs font-semibold ${fileName === name ? "border-emerald-300 bg-emerald-50 text-emerald-800" : "border-slate-300 bg-white text-slate-800"}`}
+                  onClick={() => {
+                    setFileName(name);
+                    setNotice(null);
+                  }}
+                >
+                  {name}
+                </button>
+              ))}
+            </div>
+          ) : null}
           <label className="block text-xs font-semibold text-slate-900">1. Biopsy result
             <input
               type="file"

@@ -43,6 +43,7 @@ export function waitStat(values: number[], p90Minimum = 5): WaitStat {
 }
 
 export function daysSinceResult(item: ScreeningCase, asOf = AS_OF): number {
+  if (typeof item.demoDay === "number") return item.demoDay;
   return daysBetween(item.resultOn, asOf);
 }
 
