@@ -3,6 +3,7 @@
 import { useDemo } from "@/components/providers";
 import type { DraftKind, DraftSource } from "@/lib/draft";
 import { useState } from "react";
+import { createPortal } from "react-dom";
 
 export function DraftBox({ caseId, kind, label }: { caseId: string; kind: DraftKind; label: string }) {
   const { recordDraftApproval } = useDemo();
@@ -11,6 +12,7 @@ export function DraftBox({ caseId, kind, label }: { caseId: string; kind: DraftK
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
 
   async function requestDraft(next: "en" | "ar") {
     setBusy(true);
@@ -77,6 +79,10 @@ export function DraftBox({ caseId, kind, label }: { caseId: string; kind: DraftK
                 recordDraftApproval(caseId, source, text);
                 setSource(null);
                 setText("");
+                setSaved(true);
+                window.setTimeout(() => {
+                  document.getElementById("audit-latest")?.scrollIntoView({ behavior: "smooth", block: "center" });
+                }, 50);
               }}
             >
               Approve & save to record (simulated)
@@ -86,6 +92,18 @@ export function DraftBox({ caseId, kind, label }: { caseId: string; kind: DraftK
             </button>
           </div>
         </div>
+      ) : null}
+      {saved ? createPortal(
+        <div className="fixed inset-x-0 top-20 z-[80] flex justify-center px-4">
+          <div role="dialog" aria-modal="true" aria-labelledby="draft-saved-title" className="w-full max-w-md rounded-2xl border border-emerald-200 bg-white p-6 shadow-window">
+            <p id="draft-saved-title" className="text-2xl font-extrabold tracking-tight text-emerald-800">Successfully saved</p>
+            <p className="mt-2 text-sm text-slate-700">The draft is on this record. Nothing was sent.</p>
+            <button type="button" className="mt-4 rounded-full bg-slate-950 px-5 py-2 text-sm font-semibold text-white hover:bg-blue-800" onClick={() => setSaved(false)}>
+              Close
+            </button>
+          </div>
+        </div>,
+        document.body,
       ) : null}
     </div>
   );
