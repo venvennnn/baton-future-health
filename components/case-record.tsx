@@ -1,11 +1,14 @@
 "use client";
 
 import { PathologyLock, ReadinessGate, SbarThread } from "@/components/coordination";
+import { DraftBox } from "@/components/draft-box";
 import { useDemo } from "@/components/providers";
+import { RiskPill } from "@/components/risk-pill";
 import { daysSinceResult, destinationOptions, isOverdue, maskEmiratesId, overdueBy } from "@/lib/analytics";
 import { DEMO_CASE_ID } from "@/lib/cases";
 import { formatDay, formatDays } from "@/lib/dates";
 import { facilityName } from "@/lib/facilities";
+import { MODEL_CARD, dropoutRisk, topReasons } from "@/lib/risk";
 import { BOOKING_SLA_DAYS, type OutreachTouch } from "@/lib/types";
 import Link from "next/link";
 import { useState } from "react";
@@ -24,6 +27,7 @@ export function CaseRecord({ caseId }: { caseId: string }) {
   const returned = options.find((option) => option.rejected);
   const days = daysSinceResult(item);
   const remaining = BOOKING_SLA_DAYS - days;
+  const risk = dropoutRisk(item);
 
   return (
     <main className="page-rise mx-auto max-w-7xl space-y-5 px-4 py-8 sm:px-6 lg:px-8">
@@ -70,7 +74,10 @@ export function CaseRecord({ caseId }: { caseId: string }) {
                 {item.closed ? <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-800">Closed on Day {days}</span> : null}
                 {item.handoverStatus === "rejected_capacity" ? <span className="rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-800">Referral returned — action required</span> : null}
                 {item.femaleTeamRequested ? <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-xs font-bold text-emerald-800">Female specialist requested</span> : null}
+                <RiskPill risk={risk} />
               </div>
+              <p className="mt-1 text-sm text-slate-700"><span className="font-bold">Why: </span>{risk.band === "closed" ? "Closed. This case is excluded from the ranking." : topReasons(risk)}</p>
+              <a href="#model-card" className="text-xs font-semibold text-blue-800 underline">How this is calculated</a>
               <p className="mt-1 text-xs text-slate-700">
                 {item.nameAr ? <span>{item.nameAr} · </span> : null}
                 Emirates ID <b className="text-slate-900">{maskEmiratesId(item.emiratesId)}</b>
@@ -216,7 +223,10 @@ export function CaseRecord({ caseId }: { caseId: string }) {
               </div>
               <div className="grid grid-cols-1 lg:grid-cols-5">
                 <div className="lg:col-span-2"><ReadinessGate key={`${item.id}-${gateKey}`} caseId={item.id} onReady={setReady} /></div>
-                <div className="lg:col-span-3"><SbarThread item={item} /></div>
+                <div className="lg:col-span-3">
+                  <SbarThread item={item} />
+                  <div className="px-4 pb-4"><DraftBox caseId={item.id} kind="sbar" label="Draft SBAR with AI" /></div>
+                </div>
               </div>
             </div>
           </section>
@@ -226,6 +236,7 @@ export function CaseRecord({ caseId }: { caseId: string }) {
               <h3 className="text-lg font-bold text-slate-900">Outreach history</h3>
               <span className="text-xs font-semibold text-blue-800">{item.outreach.length} touches</span>
             </div>
+            <DraftBox caseId={item.id} kind="teachback" label="Draft teach-back message" />
             <div className="mb-3 flex flex-wrap gap-2">
               {(["call", "sms", "whatsapp", "clinic"] as const).map((channel) => (
                 <button key={channel} type="button" className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-800 hover:bg-slate-200" onClick={() => { recordSimulatedOutreach(item.id, channel, `Simulated ${channel} entry.`); setNotice(`Simulated ${channel} entry saved. Nothing was sent.`); }}>
@@ -275,6 +286,13 @@ export function CaseRecord({ caseId }: { caseId: string }) {
             </div>
           </div>
 
+          <section id="model-card" className="space-y-2 rounded-2xl border border-slate-200 bg-white p-5 text-sm shadow-card">
+            <h3 className="font-bold text-slate-900">{MODEL_CARD.name}</h3>
+            <p>{MODEL_CARD.intendedUse}</p>
+            <p>{MODEL_CARD.notFor}</p>
+            <p>{MODEL_CARD.recalibration}</p>
+            <p className="font-semibold">{MODEL_CARD.ownerSignOff}</p>
+          </section>
           <div id="audit" className="space-y-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-card">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-bold text-slate-900">Add a local note</h3>

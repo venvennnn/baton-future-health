@@ -3,12 +3,18 @@ import { Shell } from "@/components/shell";
 import { WalkthroughProvider } from "@/components/walkthrough";
 import { getSession } from "@/lib/session-cookie";
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans } from "next/font/google";
+import { Noto_Naskh_Arabic, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
   variable: "--font-jakarta",
+  display: "swap",
+});
+
+const naskh = Noto_Naskh_Arabic({
+  subsets: ["arabic"],
+  variable: "--font-naskh",
   display: "swap",
 });
 
@@ -22,7 +28,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const role = session?.role ?? null;
   return (
     <html lang="en">
-      <body className={`${jakarta.variable} font-sans antialiased`}>
+      <body className={`${jakarta.variable} ${naskh.variable} font-sans antialiased`}>
         <Providers>
           <WalkthroughProvider role={role}>
             <Shell role={role}>{children}</Shell>

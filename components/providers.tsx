@@ -1,6 +1,7 @@
 "use client";
 
 import { CASES, DEMO_CASE_ID } from "@/lib/cases";
+import { draftApprovalEvent, type DraftSource } from "@/lib/draft";
 import { addDays } from "@/lib/dates";
 import { facilityName } from "@/lib/facilities";
 import { CASE_FILE_ILLNESS_ID, activeIllness, defaultIllnesses, normalizeIllnesses, type IllnessProgramme } from "@/lib/illnesses";
@@ -38,6 +39,7 @@ interface Store {
   resetDemoCase: (caseId: string) => void;
   recordSimulatedOutreach: (caseId: string, channel: OutreachTouch["channel"], note: string) => void;
   recordNote: (caseId: string, note: string) => void;
+  recordDraftApproval: (caseId: string, source: DraftSource, text: string) => void;
   illnesses: IllnessProgramme[];
   activeIllness: IllnessProgramme;
   setActiveIllness: (id: string) => void;
@@ -339,6 +341,19 @@ export function Providers({ children }: { children: React.ReactNode }) {
       if (id === CASE_FILE_ILLNESS_ID) return;
       setIllnesses((current) => current.filter((item) => item.id !== id));
       setActiveIllnessId((current) => (current === id ? CASE_FILE_ILLNESS_ID : current));
+    },
+    recordDraftApproval: (caseId, source, text) => {
+      const clean = text.trim();
+      if (!clean) return;
+      patch(caseId, (current) => ({
+        ...carried(current),
+        events: [...(current?.events ?? []), draftApprovalEvent(caseId, "Clinician", source, todayStamp(), clean)],
+        outreach: current?.outreach ?? [],
+        handoverStatus: current?.handoverStatus,
+        endoscopyFacilityId: current?.endoscopyFacilityId,
+        nextAction: current?.nextAction,
+        simulatedPending: current?.simulatedPending,
+      }));
     },
     recordNote: (caseId, note) => {
       const text = note.trim();

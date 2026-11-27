@@ -1,5 +1,6 @@
 import { CASES } from "../cases";
 import { ENDOSCOPY_FACILITIES } from "../facilities";
+import { RISK_INTERCEPT, RISK_WEIGHTS, sigmoid } from "../risk";
 import { priorityRank, type Priority, type ScreeningCase } from "../types";
 
 export interface SimFacility {
@@ -247,6 +248,29 @@ export function attendProbability(patient: SimPatient, teachBack: boolean): numb
   return Math.max(0.35, Math.min(0.95, value));
 }
 
+/** Simulator-side analogue of the case-board dropout model, using only cohort fields. */
+export function simDropoutProbability(patient: SimPatient, attempts: number): number {
+  const weights = RISK_WEIGHTS;
+  const logit =
+    RISK_INTERCEPT +
+    weights.delayWeeks.weight * Math.min(patient.referralDay / 7, 12) +
+    weights.failedContacts.weight * Math.min(2, attempts) +
+    weights.unacknowledged.weight * (attempts === 0 ? 1 : 0) +
+    weights.femaleSlot.weight * (patient.femalePref ? 1 : 0) +
+    weights.ageBand.weight * Math.min(Math.max(patient.age - 45, 0) / 10, 4) +
+    weights.female.weight * (patient.sex === "F" ? 1 : 0);
+  return sigmoid(logit);
+}
+
+/** Expected change from one call: P(dropout) × P(reached) × P(attend | reached, teach-back) − residual completion without the call. */
+export function upliftScore(patient: SimPatient, policy: ResourcePolicy, attempts: number): number {
+  const pDrop = simDropoutProbability(patient, attempts);
+  const pReach = contactProbability(patient, policy, attempts);
+  const pAttend = attendProbability(patient, policy.teachBack);
+  const baseline = (1 - pDrop) * attendProbability(patient, false) * 0.15;
+  return pDrop * pReach * pAttend - baseline;
+}
+
 interface RecordTime {
   eventDay: number | null;
   censorDay: number;
@@ -458,8 +482,7 @@ export function simulateResource(patients: SimPatient[], policy: ResourcePolicy,
     callQueue.sort((a, b) => {
       if (policy.strategy === "risk") return patients[b].priority - patients[a].priority || patients[b].fit - patients[a].fit || a - b;
       if (policy.strategy === "benefit") {
-        const score = (patient: SimPatient) => patient.priority * (0.35 + 0.65 * patient.contactDifficulty);
-        return score(patients[b]) - score(patients[a]) || a - b;
+        return upliftScore(patients[b], policy, attempts[b]) - upliftScore(patients[a], policy, attempts[a]) || a - b;
       }
       return a - b;
     });

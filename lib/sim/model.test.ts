@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { handoversRecovered } from "../impact";
 import {
   BASELINE_POLICY,
   buildCohort,
@@ -95,6 +96,27 @@ describe("resource comparison", () => {
     const ar = tiny.filter((item) => item.language === "ar").length;
     const en = tiny.filter((item) => item.language === "en").length;
     if (ar < 30 || en < 30) expect(result.language).toBeNull();
+  });
+});
+
+describe("uplift ordering", () => {
+  it("repeats for a fixed seed on the default cohort and resources", () => {
+    const cohort = buildCohort(26771, 2500, true);
+    const run = (strategy: "fifo" | "risk" | "benefit") => simulateResource(cohort, navigationPolicy(8, 15, true, strategy)).km.atHorizon ?? 0;
+    const fifo = run("fifo");
+    const risk = run("risk");
+    const uplift = run("benefit");
+    expect(run("benefit")).toBe(uplift);
+    expect(run("fifo")).toBe(fifo);
+    expect(run("risk")).toBe(risk);
+    const recovered = {
+      fifo: handoversRecovered(fifo, fifo).perThousand,
+      risk: handoversRecovered(risk, fifo).perThousand,
+      uplift: handoversRecovered(uplift, fifo).perThousand,
+    };
+    expect(recovered.fifo).toBe(0);
+    expect(uplift).toBeGreaterThan(fifo);
+    expect(fifo).toBeGreaterThan(risk);
   });
 });
 

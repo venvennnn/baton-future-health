@@ -2,11 +2,13 @@
 
 import { ClinicFilter } from "@/components/clinic-filter";
 import { useDemo } from "@/components/providers";
+import { RiskPill } from "@/components/risk-pill";
 import { daysSinceResult, destinationOptions, filterCases, isHighStall, isOverdue, isRejected, kpis, maskEmiratesId, overdueBy, stageCounts, stallScore } from "@/lib/analytics";
 import { formatDays } from "@/lib/dates";
 import { facilityShort } from "@/lib/facilities";
 import { DEMO_CASE_ID } from "@/lib/cases";
 import { CASE_FILE_ILLNESS_ID } from "@/lib/illnesses";
+import { OPERATIONAL_PRIOR_NOTE, dropoutRisk, outreachUplift, topReasons } from "@/lib/risk";
 import { HANDOVER_LABEL, STAGE_LABEL, STAGE_ORDER, type ScreeningCase, type Stage } from "@/lib/types";
 import Link from "next/link";
 import { useMemo, useState } from "react";
@@ -20,6 +22,7 @@ export function CaseBoard() {
   const { cases, clinicId, recordSimulatedHandover, recordSimulatedOutreach, activeIllness } = useDemo();
   const [stage, setStage] = useState<Stage | "all">("all");
   const [query, setQuery] = useState("");
+  const [order, setOrder] = useState<"risk" | "stall" | "uplift">("risk");
   const [selectedId, setSelectedId] = useState(DEMO_CASE_ID);
   const [notice, setNotice] = useState<string | null>(null);
   const [breachedOnly, setBreachedOnly] = useState(false);
@@ -31,12 +34,13 @@ export function CaseBoard() {
   const counts = stageCounts(scoped);
   const filtered = useMemo(() => {
     const rows = filterCases(scoped, query, stage).sort((a, b) => {
-      if (a.id === DEMO_CASE_ID) return -1;
-      if (b.id === DEMO_CASE_ID) return 1;
-      return stallScore(b) - stallScore(a);
+      if (order === "stall") return stallScore(b) - stallScore(a) || a.id.localeCompare(b.id);
+      if (order === "uplift") return outreachUplift(b) - outreachUplift(a) || a.id.localeCompare(b.id);
+      const closed = Number(a.closed) - Number(b.closed);
+      return closed || dropoutRisk(b).p - dropoutRisk(a).p || a.id.localeCompare(b.id);
     });
     return breachedOnly ? rows.filter((item) => isOverdue(item)) : rows;
-  }, [scoped, query, stage, breachedOnly]);
+  }, [scoped, query, stage, breachedOnly, order]);
   const selected = filtered.find((item) => item.id === selectedId) ?? filtered[0];
   const options = selected ? destinationOptions(selected, cases) : [];
   const recommended = options.find((option) => !option.rejected) ?? options[0];
@@ -112,7 +116,11 @@ export function CaseBoard() {
               <span className="text-sm font-bold text-slate-900">Queue Dispatch List</span>
               <span className="rounded-full bg-slate-200 px-2 py-0.5 text-[11px] font-semibold text-slate-800">{filtered.length}</span>
             </div>
-            <span className="text-[11px] font-semibold text-slate-700">Sorted by time waiting</span>
+            <div className="flex flex-wrap items-center gap-1 text-[11px] font-semibold">
+              <button type="button" onClick={() => setOrder("risk")} className={`rounded-md px-2 py-1 ${order === "risk" ? "bg-slate-900 text-white" : "text-slate-700"}`}>Dropout risk</button>
+              <button type="button" onClick={() => setOrder("stall")} className={`rounded-md px-2 py-1 ${order === "stall" ? "bg-slate-900 text-white" : "text-slate-700"}`}>Stall order</button>
+              <button type="button" onClick={() => setOrder("uplift")} className={`rounded-md px-2 py-1 ${order === "uplift" ? "bg-slate-900 text-white" : "text-slate-700"}`}>Call list</button>
+            </div>
           </div>
           {filtered.length === 0 ? (
             <div className="p-8 text-center">
@@ -126,6 +134,8 @@ export function CaseBoard() {
                   <tr className="border-b border-slate-200 bg-white text-[11px] uppercase tracking-wider text-slate-700">
                     <th className="px-5 py-2 font-bold">Case and patient</th>
                     <th className="px-3 py-2 font-bold">Pathway stage</th>
+                    <th className="px-3 py-2 font-bold" title={OPERATIONAL_PRIOR_NOTE}>Dropout risk</th>
+                    {order === "uplift" ? <th className="px-3 py-2 font-bold">Expected gain</th> : null}
                     <th className="px-3 py-2 font-bold">Assigned lead</th>
                     <th className="px-3 py-2 font-bold">Since result</th>
                     <th className="px-5 py-2 text-right font-bold">Action</th>
@@ -133,12 +143,14 @@ export function CaseBoard() {
                 </thead>
                 <tbody className="queue-rise divide-y divide-slate-100">
                   {filtered.map((item) => (
-                    <tr key={item.id} onClick={() => setSelectedId(item.id)} className={`cursor-pointer ${selected?.id === item.id ? "bg-blue-50/70" : "hover:bg-slate-50"}`}>
+                    <tr key={item.id} onClick={() => setSelectedId(item.id)} onMouseEnter={() => setSelectedId(item.id)} className={`cursor-pointer ${selected?.id === item.id ? "bg-blue-50/70" : "hover:bg-slate-50"}`}>
                       <td className="px-5 py-3">
                         <div className="font-bold text-slate-900">{item.name}</div>
                         <div className="text-xs text-slate-600">{item.id} · {item.age}{item.sex} · FIT {item.fitUgG} · {maskEmiratesId(item.emiratesId)}</div>
                       </td>
                       <td className="px-3 py-3"><StatusChip item={item} /></td>
+                      <td className="px-3 py-3"><RiskPill risk={dropoutRisk(item)} /></td>
+                      {order === "uplift" ? <td className="px-3 py-3 text-xs font-bold text-slate-800">{item.closed ? "—" : `+${Math.round(outreachUplift(item) * 100)} pts`}</td> : null}
                       <td className="px-3 py-3 text-slate-800">{item.ownerName}<div className="text-xs text-slate-600">{facilityShort(item.originFacilityId)}</div></td>
                       <td className={`px-3 py-3 font-semibold ${isOverdue(item) ? "text-red-700" : "text-slate-800"}`}>{daysSinceResult(item)}d{isOverdue(item) ? ` · +${overdueBy(item)}` : ""}</td>
                       <td className="px-5 py-3 text-right"><Link href={`/cases/${item.id}`} className="text-sm font-semibold text-blue-800 hover:underline">Open</Link></td>
@@ -162,7 +174,9 @@ export function CaseBoard() {
                 <Fact label="Accountable team" value={`${selected.ownerTeam} · ${selected.ownerName}`} />
                 <Fact label="Handover" value={handoverText(selected)} />
                 <Fact label="Next action" value={selected.nextAction} />
+                <Fact label="Dropout risk" value={dropoutRisk(selected).band === "closed" ? "Closed" : `${Math.round(dropoutRisk(selected).p * 100)}%`} />
               </dl>
+              <p className="mt-3 text-sm text-slate-700"><span className="font-bold">Why: </span>{dropoutRisk(selected).band === "closed" ? "Closed cases are excluded from the ranking." : topReasons(dropoutRisk(selected))}</p>
               <div className="mt-4">
                 <div className="mb-1 flex justify-between text-xs font-bold uppercase text-slate-500">
                   <span>Days since positive FIT / 14-day booking target</span>
