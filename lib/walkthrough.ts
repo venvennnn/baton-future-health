@@ -49,7 +49,7 @@ const COPY: Record<"en" | "ar", Record<TourStepId, StepCopy>> = {
     },
     hero: {
       title: "Follow up, hand over, close the loop",
-      body: "The opening window is the pathway. A positive result, outreach, and a returned referral stay on one case until the report and a disposition are recorded.",
+      body: "The opening window is the pathway. A fresh positive result and the outreach log stay on one case until the report and a disposition are recorded.",
     },
     flows: {
       title: "Four milestones",
@@ -73,7 +73,7 @@ const COPY: Record<"en" | "ar", Record<TourStepId, StepCopy>> = {
     },
     readiness: {
       title: "Clear the checklist first",
-      body: "eGFR, the blood-thinner hold, and sedation risk have to be ticked before a simulated handover can be recorded.\n\nTwo are already ticked on this case. The handover buttons stay off until the third is ticked.\n\nThe checklist lives in this browser. It does not send a referral.",
+      body: "eGFR, the blood-thinner hold, and sedation risk have to be ticked before a simulated handover can be recorded.\n\neGFR / renal labs starts unticked on this case, so the missing kidney labs are the blocker. The handover buttons stay off until it is ticked. The hold plan and sedation risk are already ticked.\n\nThe checklist lives in this browser. It does not send a referral.",
     },
     consult: {
       title: "Ask the specialist here",
@@ -81,7 +81,7 @@ const COPY: Record<"en" | "ar", Record<TourStepId, StepCopy>> = {
     },
     lock: {
       title: "Closure stays locked",
-      body: "Choose a biopsy file and a disposition: Oncology MDT, or a 3-year recall.\n\nThe button stays off until both are set. On this case it also stays off because the colonoscopy has not been attended.\n\nA later save writes a local note. It does not close the shared file.",
+      body: "Choose a biopsy file and a disposition: Oncology MDT, or a 3-year recall.\n\nThe button stays off until both are set, and until colonoscopy attendance is recorded.\n\nRecording closure closes the case in this browser on Day 16. It does not change the shared file, and nothing is sent.",
     },
     routing: {
       title: "Effective wait, and a female team",
@@ -127,7 +127,7 @@ const COPY: Record<"en" | "ar", Record<TourStepId, StepCopy>> = {
     },
     hero: {
       title: "تابع، سلّم، وأغلق المسار",
-      body: "النافذة الافتتاحية هي المسار. نتيجة إيجابية وتواصل وإحالة معادة تبقى في حالة واحدة حتى يُسجَّل التقرير والقرار.",
+      body: "النافذة الافتتاحية هي المسار. نتيجة إيجابية حديثة وسجل التواصل يبقيان في حالة واحدة حتى يُسجَّل التقرير والقرار.",
     },
     flows: {
       title: "أربع محطات",
@@ -151,7 +151,7 @@ const COPY: Record<"en" | "ar", Record<TourStepId, StepCopy>> = {
     },
     readiness: {
       title: "أكمل القائمة أولًا",
-      body: "يجب تعليم وظائف الكلى وخطة إيقاف مميع الدم وخطر التخدير قبل تسجيل تسليم محاكى.\n\nاثنان معلَّمان في هذه الحالة. تبقى أزرار التسليم متوقفة حتى يُعلَّم الثالث.\n\nالقائمة في هذا المتصفح، ولا ترسل إحالة.",
+      body: "يجب تعليم وظائف الكلى وخطة إيقاف مميع الدم وخطر التخدير قبل تسجيل تسليم محاكى.\n\nوظائف الكلى تبدأ غير معلَّمة في هذه الحالة، فهي العائق الظاهر. تبقى أزرار التسليم متوقفة حتى تُعلَّم. خطة الإيقاف وخطر التخدير معلَّمان.\n\nالقائمة في هذا المتصفح، ولا ترسل إحالة.",
     },
     consult: {
       title: "اسأل الاختصاصي هنا",
@@ -159,7 +159,7 @@ const COPY: Record<"en" | "ar", Record<TourStepId, StepCopy>> = {
     },
     lock: {
       title: "الإغلاق يبقى مقفلًا",
-      body: "اختر ملف الخزعة وقرارًا: اجتماع الأورام، أو إعادة الفحص بعد 3 سنوات.\n\nيبقى الزر متوقفًا حتى يُختار الاثنان. وفي هذه الحالة يبقى متوقفًا أيضًا لأن التنظير لم يُحضر.\n\nالحفظ لاحقًا يكتب ملاحظة محلية، ولا يغلق الملف المشترك.",
+      body: "اختر ملف الخزعة وقرارًا: اجتماع الأورام، أو إعادة الفحص بعد 3 سنوات.\n\nيبقى الزر متوقفًا حتى يُختار الاثنان، وحتى يُسجَّل حضور التنظير.\n\nتسجيل الإغلاق يغلق الحالة في هذا المتصفح في اليوم 16. لا يغيّر الملف المشترك، ولا يُرسل شيء.",
     },
     routing: {
       title: "الانتظار الفعّال وفريق نسائي",
@@ -240,7 +240,7 @@ const NAV_COPY: Record<"en" | "ar", Record<"user" | "admin", StepCopy>> = {
     },
     admin: {
       title: "Overview, waits, and policy",
-      body: "Overview, facility waits, capacity planning, governance, and illness settings. Case records open from a User session.",
+      body: "Overview, facility waits, capacity planning, governance, and illness settings. Case records open from a Clinician session.",
     },
   },
   ar: {
@@ -250,7 +250,7 @@ const NAV_COPY: Record<"en" | "ar", Record<"user" | "admin", StepCopy>> = {
     },
     admin: {
       title: "النظرة العامة والانتظار والسياسة",
-      body: "النظرة العامة وانتظار المنشآت وتخطيط السعة والحوكمة وإعدادات الأمراض. سجلات الحالات تُفتح من جلسة المستخدم.",
+      body: "النظرة العامة وانتظار المنشآت وتخطيط السعة والحوكمة وإعدادات الأمراض. سجلات الحالات تُفتح من جلسة الفريق السريري.",
     },
   },
 };
@@ -258,11 +258,11 @@ const NAV_COPY: Record<"en" | "ar", Record<"user" | "admin", StepCopy>> = {
 const WORKLIST_ADMIN: Record<"en" | "ar", StepCopy> = {
   en: {
     title: "The cases behind a cell",
-    body: "This list is the open cases for the facility and stage you select, longest current wait first. Opening a record needs the User demo.",
+    body: "This list is the open cases for the facility and stage you select, longest current wait first. Opening a record needs the Clinician demo.",
   },
   ar: {
     title: "الحالات خلف الخلية",
-    body: "هذه القائمة هي الحالات المفتوحة للمنشأة والمرحلة المختارتين، الأطول انتظارًا أولًا. فتح السجل يحتاج عرض المستخدم.",
+    body: "هذه القائمة هي الحالات المفتوحة للمنشأة والمرحلة المختارتين، الأطول انتظارًا أولًا. فتح السجل يحتاج عرض الفريق السريري.",
   },
 };
 

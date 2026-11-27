@@ -30,7 +30,11 @@ export function CaseBoard() {
   const metrics = kpis(scoped);
   const counts = stageCounts(scoped);
   const filtered = useMemo(() => {
-    const rows = filterCases(scoped, query, stage).sort((a, b) => stallScore(b) - stallScore(a));
+    const rows = filterCases(scoped, query, stage).sort((a, b) => {
+      if (a.id === DEMO_CASE_ID) return -1;
+      if (b.id === DEMO_CASE_ID) return 1;
+      return stallScore(b) - stallScore(a);
+    });
     return breachedOnly ? rows.filter((item) => isOverdue(item)) : rows;
   }, [scoped, query, stage, breachedOnly]);
   const selected = filtered.find((item) => item.id === selectedId) ?? filtered[0];

@@ -3,6 +3,7 @@
 import { PathologyLock, ReadinessGate, SbarThread } from "@/components/coordination";
 import { useDemo } from "@/components/providers";
 import { daysSinceResult, destinationOptions, isOverdue, maskEmiratesId, overdueBy } from "@/lib/analytics";
+import { DEMO_CASE_ID } from "@/lib/cases";
 import { formatDay, formatDays } from "@/lib/dates";
 import { facilityName } from "@/lib/facilities";
 import { BOOKING_SLA_DAYS, type OutreachTouch } from "@/lib/types";
@@ -10,11 +11,12 @@ import Link from "next/link";
 import { useState } from "react";
 
 export function CaseRecord({ caseId }: { caseId: string }) {
-  const { cases, recordSimulatedHandover, recordSimulatedOutreach, recordNote } = useDemo();
+  const { cases, recordSimulatedHandover, recordColonoscopyAttended, recordDemoClosure, resetDemoCase, recordSimulatedOutreach, recordNote } = useDemo();
   const item = cases.find((row) => row.id === caseId);
   const [note, setNote] = useState("");
   const [notice, setNotice] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
+  const [gateKey, setGateKey] = useState(0);
   if (!item) return null;
   const options = destinationOptions(item, cases);
   const eligible = options.filter((option) => !option.rejected);
@@ -36,9 +38,23 @@ export function CaseRecord({ caseId }: { caseId: string }) {
         </div>
         <div className="flex items-center gap-3">
           <span className="flex items-center gap-1.5 font-medium">
-            <span className={`h-2 w-2 rounded-full ${isOverdue(item) ? "bg-red-500" : "bg-amber-500"}`} />
-            {isOverdue(item) ? `${overdueBy(item)} days past the ${BOOKING_SLA_DAYS}-day target` : `${remaining} days left in the ${BOOKING_SLA_DAYS}-day target`}
+            <span className={`h-2 w-2 rounded-full ${item.closed ? "bg-emerald-500" : isOverdue(item) ? "bg-red-500" : "bg-amber-500"}`} />
+            {item.closed ? `Closed on Day ${days}` : isOverdue(item) ? `${overdueBy(item)} days past the ${BOOKING_SLA_DAYS}-day target` : `${remaining} days left in the ${BOOKING_SLA_DAYS}-day target`}
           </span>
+          {item.id === DEMO_CASE_ID ? (
+            <button
+              type="button"
+              className="rounded border border-slate-300 bg-white px-2.5 py-1 font-medium text-slate-700 hover:bg-slate-50"
+              onClick={() => {
+                resetDemoCase(item.id);
+                setGateKey((current) => current + 1);
+                setReady(false);
+                setNotice("Demo case reset in this browser. Nothing was sent.");
+              }}
+            >
+              Reset demo case
+            </button>
+          ) : null}
           <button type="button" className="rounded border border-slate-300 bg-white px-2.5 py-1 font-medium text-slate-800 hover:bg-slate-50" onClick={() => window.print()}>Export summary</button>
         </div>
       </div>
@@ -51,6 +67,7 @@ export function CaseRecord({ caseId }: { caseId: string }) {
               <div className="flex flex-wrap items-center gap-2">
                 <h1 className="text-2xl font-extrabold tracking-tight text-slate-950">{item.name}</h1>
                 <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-800">{item.age}y · {item.sex === "F" ? "Female" : "Male"}</span>
+                {item.closed ? <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-800">Closed on Day {days}</span> : null}
                 {item.handoverStatus === "rejected_capacity" ? <span className="rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-800">Referral returned — action required</span> : null}
                 {item.femaleTeamRequested ? <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-xs font-bold text-emerald-800">Female specialist requested</span> : null}
               </div>
@@ -69,7 +86,7 @@ export function CaseRecord({ caseId }: { caseId: string }) {
         <div className="mt-5 grid grid-cols-2 gap-4 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm md:grid-cols-4">
           <div><p className="text-[11px] font-bold uppercase tracking-wider text-slate-700">Trigger</p><p className="font-semibold text-blue-800">FIT positive</p><p className="text-xs text-slate-700">{item.fitUgG} µg/g · {formatDay(item.resultOn)}</p></div>
           <div><p className="text-[11px] font-bold uppercase tracking-wider text-slate-700">Care coordinator</p><p className="font-semibold text-slate-900">{item.navigator ?? item.ownerName}</p><p className="text-xs text-slate-700">{item.ownerTeam}</p></div>
-          <div><p className="text-[11px] font-bold uppercase tracking-wider text-slate-700">Booking target</p><p className={`font-semibold ${isOverdue(item) ? "text-red-700" : "text-amber-800"}`}>{isOverdue(item) ? `${overdueBy(item)} days over` : `${remaining} days remaining`}</p><p className="text-xs text-slate-700">Day {days} of {BOOKING_SLA_DAYS}</p></div>
+          <div><p className="text-[11px] font-bold uppercase tracking-wider text-slate-700">Booking target</p><p className={`font-semibold ${item.closed ? "text-emerald-700" : isOverdue(item) ? "text-red-700" : "text-amber-800"}`}>{item.closed ? `Closed on Day ${days}` : isOverdue(item) ? `${overdueBy(item)} days over` : `${remaining} days remaining`}</p><p className="text-xs text-slate-700">{item.closed ? "Documented in this browser" : `Day ${days} of ${BOOKING_SLA_DAYS}`}</p></div>
           <div><p className="text-[11px] font-bold uppercase tracking-wider text-slate-700">Language</p><p className="font-semibold text-slate-900">{item.language === "ar" ? "Arabic" : "English"}</p><p className="text-xs text-slate-700">{item.physician}</p></div>
         </div>
       </section>
@@ -84,12 +101,39 @@ export function CaseRecord({ caseId }: { caseId: string }) {
           <div className="pathway-steps relative grid grid-cols-5 gap-4">
             <Step done title="Positive FIT result" when={formatDay(item.resultOn)} detail="Result on file" />
             <Step done={item.outreach.length > 0} title="Patient outreach" when={item.outreach.length ? `${item.outreach.length} logged` : "None yet"} detail="Log only" />
-            <Step alert={item.handoverStatus === "rejected_capacity" || item.handoverStatus === "reverted"} done={item.handoverStatus === "accepted" || item.handoverStatus === "booked" || item.procedureAttended} title="GI referral" when={returned ? "Returned" : "Open"} detail={returned ? returned.short : "No return on file"} />
+            <Step alert={item.handoverStatus === "rejected_capacity" || item.handoverStatus === "reverted"} done={item.handoverStatus === "accepted" || item.handoverStatus === "booked" || item.procedureAttended || (item.id === DEMO_CASE_ID && Boolean(item.simulatedPending))} title="GI referral" when={returned ? "Returned" : item.id === DEMO_CASE_ID && item.simulatedPending ? "Recorded" : "Open"} detail={returned ? returned.short : item.id === DEMO_CASE_ID && item.simulatedPending && item.endoscopyFacilityId ? facilityName(item.endoscopyFacilityId) : "No return on file"} />
             <Step done={item.procedureAttended || item.handoverStatus === "booked"} title="Colonoscopy" when={item.procedureAttended ? "Attended" : "Not attended"} detail="Separate from closure" />
-            <Step locked title="Biopsy and closure" when={item.closed ? "Closed" : "Hard lock"} detail="Biopsy and disposition" />
+            <Step locked={!item.closed} done={item.closed} title="Biopsy and closure" when={item.closed ? `Day ${days}` : "Hard lock"} detail={item.closed ? "Closed" : "Biopsy and disposition"} />
           </div>
         </div>
-        <PathologyLock item={item} onRecord={(detail) => recordNote(item.id, detail)} />
+        {item.id === DEMO_CASE_ID && !item.procedureAttended && !item.closed ? (
+          <div className="mt-4 flex flex-col gap-2 rounded-xl border border-slate-200 bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm text-slate-700">Record attendance only after the handover. It stays in this browser, nothing is sent, and attendance alone does not close the case.</p>
+            <button
+              type="button"
+              disabled={!item.simulatedPending}
+              className={`shrink-0 rounded-lg px-4 py-2.5 text-sm font-semibold ${item.simulatedPending ? "bg-slate-900 text-white hover:bg-blue-800" : "cursor-not-allowed bg-slate-200 text-slate-500"}`}
+              onClick={() => {
+                if (!item.simulatedPending) return;
+                recordColonoscopyAttended(item.id);
+                setNotice("Colonoscopy attendance recorded in this browser. Nothing was sent.");
+              }}
+            >
+              Record colonoscopy attended (simulated)
+            </button>
+          </div>
+        ) : null}
+        <PathologyLock
+          item={item}
+          onRecord={(detail) => {
+            if (item.id === DEMO_CASE_ID) {
+              recordDemoClosure(item.id, detail);
+              setNotice("Simulated closure recorded in this browser. Nothing was sent.");
+              return;
+            }
+            recordNote(item.id, detail);
+          }}
+        />
       </section>
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
@@ -171,7 +215,7 @@ export function CaseRecord({ caseId }: { caseId: string }) {
                 <p className="text-xs text-slate-700">Clear the checklist before a handover can be recorded. The thread is not delivered.</p>
               </div>
               <div className="grid grid-cols-1 lg:grid-cols-5">
-                <div className="lg:col-span-2"><ReadinessGate onReady={setReady} /></div>
+                <div className="lg:col-span-2"><ReadinessGate key={`${item.id}-${gateKey}`} caseId={item.id} onReady={setReady} /></div>
                 <div className="lg:col-span-3"><SbarThread item={item} /></div>
               </div>
             </div>

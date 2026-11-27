@@ -13,7 +13,7 @@ const initial: LoginState = {};
 
 const COPY = {
   en: {
-    userTitle: "User demo",
+    userTitle: "Clinician demo",
     adminTitle: "Admin demo",
     kicker: "Demo access",
     note: "Shared credentials for synthetic data. Nothing is sent to a hospital, Malaffi, or the Department of Health.",
@@ -27,7 +27,7 @@ const COPY = {
     account: "Demo credentials",
   },
   ar: {
-    userTitle: "عرض المستخدم",
+    userTitle: "عرض الفريق السريري",
     adminTitle: "عرض المسؤول",
     kicker: "دخول تجريبي",
     note: "بيانات مشتركة لبيانات مصطنعة. لا يُرسل شيء إلى مستشفى أو ملفّي أو دائرة الصحة.",

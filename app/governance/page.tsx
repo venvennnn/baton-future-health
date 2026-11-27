@@ -1,3 +1,4 @@
+import { DemoSessionAudit } from "@/components/demo-audit";
 import { entryHref } from "@/lib/access";
 import { getCase } from "@/lib/cases";
 import { requireRole } from "@/lib/guard";
@@ -41,6 +42,7 @@ export default async function GovernancePage() {
         <pre className="mt-3 overflow-auto rounded-xl bg-slate-950 p-4 text-xs text-slate-100">{JSON.stringify(bundle, null, 2)}</pre>
         <Link href={entryHref("admin", "/cases/FIT-26771#audit")} className="mt-3 inline-flex font-bold text-blue-700">Open the FIT-26771 audit history</Link>
       </section>
+      <DemoSessionAudit />
     </main>
   );
 }

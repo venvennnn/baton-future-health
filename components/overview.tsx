@@ -35,18 +35,18 @@ export function Overview({ role }: { role: Role | null }) {
               <div className="flex flex-col space-y-4">
                 <WindowStep delay="0.05s" done title="Result issued" detail={demo ? `FIT positive · ${demo.fitUgG} µg/g` : "FIT positive"} />
                 <WindowStep delay="0.18s" done title="Patient outreach" detail={demo ? `${demo.outreach.length} logged touches` : "Logged touches"} />
-                <WindowStep delay="0.31s" done title="Referral" detail="Returned by the receiving team" />
+                <WindowStep delay="0.31s" title="Referral" detail="Not sent yet" />
               </div>
               <Link href={entryHref(role, "/cases/FIT-26771")} className="case-live block rounded-2xl border-2 border-amber-300 bg-white p-5 shadow-card" style={{ animationDelay: "0.22s, 0.9s" }}>
                 <span className="text-base font-extrabold text-slate-900">FIT-26771</span>
-                <div className="my-3"><span className="inline-block rounded-md border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-800">Referral returned</span></div>
+                <div className="my-3"><span className="inline-block rounded-md border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-800">Awaiting readiness</span></div>
                 <div className="space-y-2 border-t border-slate-100 pt-3 text-xs text-slate-700">
                   <div><strong className="text-slate-900">Owner · </strong>{demo?.ownerName ?? "Primary coordinator"}</div>
                   <div><strong className="text-slate-900">Next step · </strong>Review destinations</div>
                 </div>
               </Link>
               <div className="flex flex-col space-y-4">
-                <WindowStep delay="0.4s" title="Receiving team" detail="Eligible slot was not available" mark="!" />
+                <WindowStep delay="0.4s" title="Receiving team" detail="Female specialist requested" />
                 <WindowStep delay="0.52s" title="Documented closure" detail="Locked until pathology is chosen" mark="lock" />
               </div>
             </div>

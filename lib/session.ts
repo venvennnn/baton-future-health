@@ -1,7 +1,7 @@
 export const SESSION_COOKIE = "baton_session";
 export const SESSION_MAX_AGE_SECONDS = 60 * 60 * 8;
 
-/** Passwordless "Continue as User" may issue only this role. */
+/** Passwordless "Continue as Clinician" may issue only this role. */
 export const USER_DEMO_ROLE = "user" as const;
 
 export type Role = "user" | "admin";

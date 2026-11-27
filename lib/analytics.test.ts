@@ -1,21 +1,38 @@
 import { describe, expect, it } from "vitest";
-import { bottleneckTable, delaySummary, filterCases, isOverdue, kpis, quantile, stageCounts } from "./analytics";
+import { bottleneckTable, daysSinceResult, delaySummary, destinationOptions, filterCases, isOverdue, kpis, quantile, stageCounts } from "./analytics";
 import { CASES, getCase } from "./cases";
 import { AS_OF } from "./types";
 
 describe("case file", () => {
-  it("keeps FIT-26771 open, owned by the origin coordinator, and capacity-rejected", () => {
+  it("keeps FIT-26771 fresh, owned by the navigator, and inside the booking target", () => {
     const item = getCase("FIT-26771");
     expect(item).toBeTruthy();
+    expect(item?.name).toBe("Fatima Al Hosani");
     expect(item?.stage).toBe("referral");
-    expect(item?.ownerTeam).toBe("Primary coordinator");
-    expect(item?.ownerName).toBe("Dr. Khalid Al Nuaimi");
-    expect(item?.handoverStatus).toBe("rejected_capacity");
-    expect(item?.eligibleSlotConstraint).toBe(true);
+    expect(item?.ownerName).toBe("Maha Mansoor, RN");
+    expect(item?.navigator).toBe("Maha Mansoor, RN");
+    expect(item?.fitUgG).toBe(142);
+    expect(item?.femaleTeamRequested).toBe(true);
+    expect(item?.handoverStatus).toBe("not_sent");
+    expect(item?.eligibleSlotConstraint).toBe(false);
     expect(item?.procedureAttended).toBe(false);
     expect(item?.closed).toBe(false);
-    expect(item?.resultOn).toBe("2025-10-28");
-    expect(isOverdue(item!, AS_OF)).toBe(true);
+    expect(item?.resultOn).toBe("2025-11-22");
+    expect(daysSinceResult(item!)).toBe(2);
+    expect(isOverdue(item!, AS_OF)).toBe(false);
+    expect(item?.events.some((event) => event.label === "Returned to the primary coordinator")).toBe(false);
+    expect(item?.outreach.some((touch) => touch.detail.includes("female endoscopy team"))).toBe(true);
+    expect(daysSinceResult({ ...item!, demoDay: 16 })).toBe(16);
+  });
+
+  it("recommends a female endoscopist inside the 14-day target for FIT-26771", () => {
+    const item = getCase("FIT-26771");
+    const top = destinationOptions(item!, CASES)[0];
+    expect(top.short).toBe("SSMC");
+    expect(top.name).toBe("Sheikh Shakhbout Medical City");
+    expect(top.femaleTeam).toBe(true);
+    expect(top.rejected).toBe(false);
+    expect(top.effectiveWait).toBe(0);
   });
 
   it("keeps procedure attendance and documented closure distinct", () => {
