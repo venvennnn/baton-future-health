@@ -6,6 +6,7 @@ const config: Config = {
     extend: {
       fontFamily: {
         sans: ["var(--font-jakarta)", "Plus Jakarta Sans", "system-ui", "sans-serif"],
+        arabic: ["var(--font-naskh)", "Noto Naskh Arabic", "serif"],
       },
       colors: {
         ink: "#131b2e",

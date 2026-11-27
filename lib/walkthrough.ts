@@ -61,7 +61,7 @@ const COPY: Record<"en" | "ar", Record<TourStepId, StepCopy>> = {
     },
     queue: {
       title: "Pick a case from the queue",
-      body: "The queue is sorted by stall score. Select a row to see the stage, the accountable team, and a link into the record. FIT-26771 is the worked example.",
+      body: "The queue is sorted by dropout risk. Select a row to see why, the stage, the accountable team, and a link into the record. FIT-26771 is the worked example.",
     },
     inspector: {
       title: "Simulated actions stay local",
@@ -139,7 +139,7 @@ const COPY: Record<"en" | "ar", Record<TourStepId, StepCopy>> = {
     },
     queue: {
       title: "اختر حالة من قائمة الانتظار",
-      body: "تُرتَّب القائمة حسب درجة التعثر. اختر صفًا لرؤية المرحلة والفريق المسؤول والرابط إلى السجل. FIT-26771 هي المثال المشروح.",
+      body: "تُرتَّب القائمة حسب احتمال التسرب. اختر صفًا لرؤية السبب والمرحلة والفريق المسؤول والرابط إلى السجل. FIT-26771 هي المثال المشروح.",
     },
     inspector: {
       title: "الإجراءات المحاكاة تبقى محلية",

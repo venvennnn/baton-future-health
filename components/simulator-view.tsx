@@ -2,6 +2,7 @@
 
 import { EquityPareto } from "@/components/coordination";
 import { facilityName, facilityShort } from "@/lib/facilities";
+import { handoversRecovered } from "@/lib/impact";
 import {
   BASELINE_POLICY,
   buildCohort,
@@ -74,6 +75,15 @@ export function SimulatorView() {
     URL.revokeObjectURL(url);
   }
 
+  const comparison = useMemo(
+    () => (["fifo", "risk", "benefit"] as const).map((item) => {
+      const result = simulateResource(cohort, navigationPolicy(calls, slots, teachBack, item));
+      const km = result.km.atHorizon ?? 0;
+      return { item, km, recovered: handoversRecovered(km, baseline.km.atHorizon ?? 0) };
+    }),
+    [cohort, calls, slots, teachBack, baseline],
+  );
+  const recovered = handoversRecovered(navigation.km.atHorizon ?? 0, baseline.km.atHorizon ?? 0);
   const callDelta = (navigation.contactedBy14 ?? 0) / navigation.n - (baseline.contactedBy14 ?? 0) / baseline.n;
   const bookDelta = navigation.booked / navigation.n - baseline.booked / baseline.n;
   const completeDelta = navigation.completed / navigation.n - baseline.completed / baseline.n;
@@ -94,8 +104,9 @@ export function SimulatorView() {
       </div>
       {replicates ? <p className="rounded-xl bg-slate-50 p-3 text-sm">{replicates}</p> : null}
 
-      <section className="stagger grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <section className="stagger grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
         <Metric label="Kaplan–Meier colonoscopy by day 180" value={pct(navigation.km.atHorizon)} delta={signed((navigation.km.atHorizon ?? 0) - (baseline.km.atHorizon ?? 0))} note={`Baseline ${pct(baseline.km.atHorizon)} · estimator: Kaplan–Meier`} />
+        <Metric label="Handovers recovered per 1,000 positive tests" value={recovered.perThousand.toFixed(0)} delta={`≈ ${recovered.ofPaper.toFixed(0)} of the 585 dropped handovers in a cohort the size of Almansoori et al.`} note="Synthetic cohort simulation · assumptions in Governance · not a forecast" />
         <Metric label="KM median wait" value={navigation.km.medianDay === null ? "Not reached" : `${navigation.km.medianDay}d`} delta={navigation.km.medianDay === null ? "Incidence stays under 50%" : `Baseline ${baseline.km.medianDay ?? "not reached"}`} note={navigation.observedWaits.median === null ? "No completions" : `Among completions only: ${navigation.observedWaits.median.toFixed(0)}d (n=${navigation.observedWaits.n})`} />
         <Metric label="KM 90th percentile" value={navigation.km.p90Day === null ? "Not reached" : `${navigation.km.p90Day}d`} delta={navigation.observedWaits.p90 === null ? "Completed-only p90 unavailable" : `Completed-only p90 ${navigation.observedWaits.p90.toFixed(0)}d`} note="Patients whose follow-up ends first are censored" />
         <Metric label="Language gap" value={navigation.language ? signed(navigation.language.gap) : "Not estimated"} delta={navigation.language ? `Arabic ${pct(navigation.language.arRate)} · English ${pct(navigation.language.enRate)}` : "Needs 30 patients in each language"} note={navigation.language ? `n Arabic ${navigation.language.nAr} · n English ${navigation.language.nEn}` : "Empty because a group is too small"} />
@@ -111,14 +122,27 @@ export function SimulatorView() {
           </label>
           <fieldset className="rounded-xl bg-slate-50 p-4">
             <legend className="font-semibold">B. Outreach order</legend>
-            <p className="mb-2 text-xs text-slate-500">Benefit rank is priority times contact difficulty. Risk rank is priority, then FIT value. FIFO is cohort order.</p>
+            <p className="mb-2 text-xs text-slate-500">Ranks people by how much a call is expected to change their outcome, not just how risky they are.</p>
             {(["benefit", "risk", "fifo"] as const).map((item) => (
               <label key={item} className="mt-2 flex items-center gap-2 rounded-xl bg-white px-3 py-2 text-sm">
                 <input type="radio" name="strategy" checked={strategy === item} onChange={() => setStrategy(item)} />
-                {item === "benefit" ? "Benefit-ranked" : item === "risk" ? "Risk-ranked" : "FIFO"}
+                {item === "benefit" ? "Uplift (expected benefit)" : item === "risk" ? "Highest risk first" : "First come, first served"}
               </label>
             ))}
           </fieldset>
+          <div className="rounded-xl border border-slate-200 bg-white p-3 text-xs">
+            <p className="font-bold text-slate-900">Same cohort and resources</p>
+            <p className="text-slate-600">Colonoscopy by day 180 (Kaplan–Meier) and handovers recovered per 1,000.</p>
+            <ul className="mt-2 space-y-1">
+              {comparison.map((row) => (
+                <li key={row.item} className="flex justify-between gap-2">
+                  <span>{row.item === "benefit" ? "Uplift" : row.item === "risk" ? "Risk" : "FIFO"}</span>
+                  <span className="font-semibold">{pct(row.km)} · {row.recovered.perThousand.toFixed(0)} / 1,000</span>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-2 text-slate-500">Recovered is versus usual care (6 calls/day, first come first served, no extra slots, teach-back off), on this same cohort. Synthetic cohort simulation · assumptions in Governance · not a forecast</p>
+          </div>
           <label className="rounded-xl bg-slate-50 p-4">
             <span className="flex justify-between font-semibold"><span>C. Extra endoscopy slots</span><span className="text-emerald-700">+{slots}%</span></span>
             <p className="text-xs text-slate-500">Scales the shared daily slot profile with the largest-remainder method. Routing comparisons do not use this slider.</p>

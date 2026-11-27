@@ -1,6 +1,7 @@
 "use client";
 
 import { ClinicFilter } from "@/components/clinic-filter";
+import { LeakagePanel } from "@/components/leakage-panel";
 import { entryHref } from "@/lib/access";
 import { useDemo } from "@/components/providers";
 import { bottleneckTable, delaySummary, programmeCounts, worklist } from "@/lib/analytics";
@@ -48,6 +49,7 @@ export function Bottlenecks() {
         <p className="mt-1 text-sm text-slate-700">Open-case age by stage. These are not live hospital waits.</p>
         <div className="mt-3"><ClinicFilter /></div>
       </div>
+      <LeakagePanel />
       <div className="stagger grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-card"><p className="text-[11px] font-bold uppercase tracking-wider text-slate-700">Endoscopy facilities</p><p className="mt-2 text-3xl font-extrabold">{ENDOSCOPY_FACILITIES.length}</p><p className="mt-1 text-xs text-slate-700">Shared with the case file</p></article>
         <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-card"><p className="text-[11px] font-bold uppercase tracking-wider text-slate-700">Longest open booking</p><p className="mt-2 text-3xl font-extrabold">{saturated?.median === null || saturated?.median === undefined ? "—" : formatDays(saturated.median).replace(" days", "d").replace(" day", "d")}</p><p className="mt-1 text-xs text-slate-700">{saturated ? saturated.facility.short : "No open booking queue"}</p></article>
