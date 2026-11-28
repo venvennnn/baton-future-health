@@ -41,6 +41,8 @@ export interface OrderImpact {
   central: ImpactScenario;
   low: ImpactScenario;
   high: ImpactScenario;
+  /** Usual-care categories after the central odds ratio converts reached handover losses. */
+  centralCounts: Record<Category, number>;
 }
 
 export interface EvidenceRow {
@@ -68,6 +70,9 @@ export interface ImpactEstimate {
   calibration: CalibrationRow[];
   evidence: EvidenceRow[];
   thresholds: Record<string, number>;
+  usualCounts: Record<Category, number>;
+  /** Same-team, central odds ratio. This is what Run simulation shows in the table. */
+  runCounts: Record<Category, number>;
 }
 
 interface Draw {
@@ -240,19 +245,28 @@ function reachedIndexes(patients: SimPatient[], categories: Category[], callsPer
   return order.slice(0, capacity);
 }
 
-function scenarioFor(categories: Category[], reached: Set<number>, oddsRatio: number, usualCare: number, eligibleUsual: number): ImpactScenario {
+function convertedIndexes(categories: Category[], reached: Set<number>, oddsRatio: number, eligibleUsual: number): Set<number> {
   const candidates: number[] = [];
   categories.forEach((category, index) => {
     if (reached.has(index) && HANDOVER.has(category)) candidates.push(index);
   });
   candidates.sort((a, b) => a - b);
   const quota = Math.round(handoverConversionShare(eligibleUsual, oddsRatio) * candidates.length);
-  const converted = new Set(candidates.slice(0, quota));
-  let completed = 0;
+  return new Set(candidates.slice(0, quota));
+}
+
+function applyConversion(categories: Category[], converted: Set<number>): Record<Category, number> {
+  const counts = emptyCounts();
   categories.forEach((category, index) => {
-    if (category === "complete" || converted.has(index)) completed += 1;
+    counts[converted.has(index) ? "complete" : category] += 1;
   });
-  const completion = categories.length === 0 ? 0 : completed / categories.length;
+  return counts;
+}
+
+function scenarioFor(categories: Category[], reached: Set<number>, oddsRatio: number, usualCare: number, eligibleUsual: number): ImpactScenario {
+  const converted = convertedIndexes(categories, reached, oddsRatio, eligibleUsual);
+  const counts = applyConversion(categories, converted);
+  const completion = categories.length === 0 ? 0 : counts.complete / categories.length;
   const scaled = scaleImpact(completion - usualCare);
   return { oddsRatio, completion, perThousand: scaled.perThousand, ofMissed: scaled.ofMissed };
 }
@@ -262,6 +276,7 @@ function orderImpact(patients: SimPatient[], categories: Category[], callsPerDay
   const reached = new Set(indexes);
   let handoverReached = 0;
   for (const index of indexes) if (HANDOVER.has(categories[index])) handoverReached += 1;
+  const centralConverted = convertedIndexes(categories, reached, NAVIGATION_ODDS.central, eligibleUsual);
   return {
     strategy,
     reached: indexes.length,
@@ -269,6 +284,7 @@ function orderImpact(patients: SimPatient[], categories: Category[], callsPerDay
     low: scenarioFor(categories, reached, NAVIGATION_ODDS.low, usualCare, eligibleUsual),
     central: scenarioFor(categories, reached, NAVIGATION_ODDS.central, usualCare, eligibleUsual),
     high: scenarioFor(categories, reached, NAVIGATION_ODDS.high, usualCare, eligibleUsual),
+    centralCounts: applyConversion(categories, centralConverted),
   };
 }
 
@@ -343,6 +359,8 @@ export function estimateImpact(patients: SimPatient[], extraCallsPerDay: number,
     calibration: calibrationRows(fitted.counts, n),
     evidence: evidenceRows(n, seed, fitted.thresholds, eligibleUsual),
     thresholds: { ...fitted.thresholds },
+    usualCounts: { ...fitted.counts },
+    runCounts: { ...sameTeam.centralCounts },
   };
 }
 
