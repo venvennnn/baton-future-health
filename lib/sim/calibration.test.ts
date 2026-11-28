@@ -46,6 +46,21 @@ describe("navigation effect", () => {
     expect(impact.routingPp).toBe(0);
   });
 
+  it("moves the same-team run off the usual-care mix", () => {
+    expect(impact.runCounts.complete / cohort.length).toBe(impact.sameTeam.central.completion);
+    expect(impact.runCounts.complete).toBeGreaterThan(impact.usualCounts.complete + 100);
+    expect(impact.runCounts.refused).toBe(impact.usualCounts.refused);
+    expect(impact.runCounts.clinical).toBe(impact.usualCounts.clinical);
+    expect(impact.runCounts.other).toBe(impact.usualCounts.other);
+    const handover = (counts: typeof impact.runCounts) => counts.never_got_result + counts.referred_never_went + counts.booked_never_came;
+    expect(handover(impact.runCounts)).toBeLessThan(handover(impact.usualCounts));
+    const missed = cohort.length - impact.runCounts.complete;
+    const usualMissed = cohort.length - impact.usualCounts.complete;
+    const moved = (["never_got_result", "referred_never_went", "booked_never_came", "refused", "clinical", "other"] as const)
+      .filter((id) => Math.abs(impact.runCounts[id] / missed - impact.usualCounts[id] / usualMissed) >= 0.005);
+    expect(moved.length).toBeGreaterThanOrEqual(4);
+  });
+
   it("keeps one odds ratio across outreach orders", () => {
     const ratios = impact.byOrder.map((order) => order.central.oddsRatio);
     expect(new Set(ratios)).toEqual(new Set([CORONADO.oddsRatio]));

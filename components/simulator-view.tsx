@@ -3,7 +3,7 @@
 import { EquityPareto } from "@/components/coordination";
 import { facilityShort } from "@/lib/facilities";
 import { ALMANSOORI, MODEL_TAG, USUAL_CALLS_PER_DAY } from "@/lib/impact";
-import { estimateImpact, type ImpactScenario, type OrderImpact, type Strategy } from "@/lib/sim/calibration";
+import { estimateImpact, type Category, type ImpactScenario, type OrderImpact, type Strategy } from "@/lib/sim/calibration";
 import { buildCohort, simulateRouting, type ResourcePolicy, type RoutingPolicyId } from "@/lib/sim/model";
 import { useMemo, useState } from "react";
 
@@ -40,6 +40,7 @@ export function SimulatorView() {
   const [replicates, setReplicates] = useState<string | null>(null);
   const [running, setRunning] = useState(false);
   const [seed, setSeed] = useState(26771);
+  const [showRun, setShowRun] = useState(false);
 
   const cohort = useMemo(() => buildCohort(seed, 2500, seed === 26771), [seed]);
   const impact = useMemo(() => estimateImpact(cohort, calls, seed), [cohort, calls, seed]);
@@ -48,6 +49,7 @@ export function SimulatorView() {
   const saturated = impact.extraCapacity.reached >= cohort.length;
 
   function runSimulation() {
+    setShowRun(true);
     setRunning(true);
     setReplicates(null);
     window.setTimeout(() => {
@@ -66,7 +68,7 @@ export function SimulatorView() {
       const current = runs.findIndex((run) => run.seed === seed);
       const chosen = runs[(current + 1) % runs.length];
       setSeed(chosen.seed);
-      setReplicates(`Showing seed ${chosen.seed}. Same team on this seed is ${pct(chosen.same, 2)}. Across seeds 26772–26779, same team is ${summarize(runs.map((run) => run.same))}. Extra navigator capacity at ${calls} calls/day is ${summarize(runs.map((run) => run.extra))}. The calibration table stays on the study targets. This seed spread is not a clinical confidence interval. ${MODEL_TAG}`);
+      setReplicates(`Showing seed ${chosen.seed}. The Model column is now this run: same team ${pct(chosen.same, 2)}. Across seeds 26772–26779, same team is ${summarize(runs.map((run) => run.same))}. Extra navigator capacity at ${calls} calls/day is ${summarize(runs.map((run) => run.extra))}. Target stays the study. Usual care still passes. This seed spread is not a clinical confidence interval. ${MODEL_TAG}`);
       setRunning(false);
     }, 30);
   }
@@ -90,7 +92,7 @@ export function SimulatorView() {
           <p className="mt-1 text-sm text-slate-700">Usual care is calibrated to completion recorded by Almansoori et al. 2021. The navigation effect is the Coronado et al. 2025 odds ratio, applied only to handover losses the same team can reach. The low–high range is that trial’s odds-ratio interval (1.30 to 2.19). This is not a Department of Health result.</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <button type="button" className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-800 hover:bg-slate-50" onClick={() => { setCalls(8); setSlots(0); setTeachBack(false); setStrategy("fifo"); setSeed(26771); setReplicates(null); }}>Reset levers</button>
+          <button type="button" className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-800 hover:bg-slate-50" onClick={() => { setCalls(8); setSlots(0); setTeachBack(false); setStrategy("fifo"); setSeed(26771); setShowRun(false); setReplicates(null); }}>Reset levers</button>
           <button type="button" className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-800 hover:bg-slate-50" onClick={download}>Save scenario</button>
           <button type="button" className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-800 disabled:opacity-60" onClick={runSimulation} disabled={running}>{running ? "Running…" : "Run simulation"}</button>
         </div>
@@ -146,7 +148,7 @@ export function SimulatorView() {
         </section>
 
         <div className="flex flex-col gap-5 lg:col-span-8">
-          <CalibrationTable rows={impact.calibration} />
+          <CalibrationTable rows={impact.calibration} showRun={showRun} n={impact.n} usualCounts={impact.usualCounts} runCounts={impact.runCounts} />
           <Decomposition impact={impact} />
         </div>
       </div>
@@ -202,33 +204,86 @@ function Metric({ label, value, delta, note }: { label: string; value: string; d
   );
 }
 
-function CalibrationTable({ rows }: { rows: { id: string; label: string; target: number; model: number; pass: boolean; basis: string }[] }) {
+function shareOf(id: string, counts: Record<Category, number>, n: number): number {
+  if (id === "complete") return n === 0 ? 0 : counts.complete / n;
+  const missed = n - counts.complete;
+  return missed === 0 ? 0 : (counts[id as Category] ?? 0) / missed;
+}
+
+function signedPp(after: number, before: number): string {
+  const pp = (after - before) * 100;
+  const rounded = Math.abs(pp).toFixed(1);
+  if (Math.abs(pp) < 0.05) return "0.0 pp";
+  return `${pp > 0 ? "+" : "−"}${rounded} pp`;
+}
+
+function CalibrationTable({
+  rows,
+  showRun,
+  n,
+  usualCounts,
+  runCounts,
+}: {
+  rows: { id: string; label: string; target: number; model: number; pass: boolean; basis: string }[];
+  showRun: boolean;
+  n: number;
+  usualCounts: Record<Category, number>;
+  runCounts: Record<Category, number>;
+}) {
+  const passed = rows.every((row) => row.pass);
   return (
     <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-100">
       <h2 className="font-bold">Calibration check</h2>
-      <p className="text-xs text-slate-500">Usual care on every seed is refit to the study, so these seven rows stay inside the pass band when you run the simulation. Completion is within 1 percentage point. Each loss share, among the people with no colonoscopy, is within 2 percentage points. Run simulation changes the seed on the Baton figures above.</p>
+      <p className="text-xs text-slate-500">
+        {showRun
+          ? `The Model column is this run: same team, central odds ratio, on the seed above. Target stays the study. Usual care on this seed still ${passed ? "passes" : "fails"}: completion within 1 percentage point, and each loss share of the people with no colonoscopy within 2. Refused, clinical reasons, and other keep the same count. Their share can rise because fewer people are missed.`
+          : "Usual care on this seed. Completion is within 1 percentage point of the study. Each loss share is within 2 percentage points. The loss shares are of the people with no colonoscopy. Run simulation replaces the Model column with this run."}
+      </p>
       <div className="mt-3 overflow-x-auto">
         <table className="w-full min-w-[520px] text-left text-sm">
           <thead>
             <tr className="text-xs uppercase text-slate-500">
               <th className="py-2">Row</th>
               <th className="py-2">Target</th>
-              <th className="py-2">Model</th>
-              <th className="py-2">Check</th>
+              <th className="py-2">{showRun ? "This run" : "Model"}</th>
+              <th className="py-2">{showRun ? "Change" : "Check"}</th>
             </tr>
           </thead>
           <tbody>
-            {rows.map((row) => (
-              <tr key={row.id} className="border-t">
-                <td className="py-2">
-                  <div className="font-semibold">{row.label}</div>
-                  <div className="text-xs text-slate-500">{row.basis}</div>
-                </td>
-                <td className="py-2">{pct(row.target)}</td>
-                <td className="py-2">{pct(row.model)}</td>
-                <td className={`py-2 font-bold ${row.pass ? "text-emerald-800" : "text-red-800"}`}>{row.pass ? "Pass" : "Fail"}</td>
-              </tr>
-            ))}
+            {rows.map((row) => {
+              const usual = shareOf(row.id, usualCounts, n);
+              const run = shareOf(row.id, runCounts, n);
+              const usualCount = usualCounts[row.id as Category] ?? 0;
+              const runCount = runCounts[row.id as Category] ?? 0;
+              const detail = row.id === "complete"
+                ? `${runCount.toLocaleString()} of ${n.toLocaleString()}`
+                : usualCount === runCount
+                  ? `${runCount.toLocaleString()} people, same count`
+                  : `${runCount.toLocaleString()} still missed, was ${usualCount.toLocaleString()}`;
+              let checkClass = "text-red-800";
+              let checkLabel = "Fail";
+              if (showRun) {
+                checkClass = "text-blue-800";
+                checkLabel = signedPp(run, usual);
+              } else if (row.pass) {
+                checkClass = "text-emerald-800";
+                checkLabel = "Pass";
+              }
+              return (
+                <tr key={row.id} className="border-t">
+                  <td className="py-2">
+                    <div className="font-semibold">{row.label}</div>
+                    <div className="text-xs text-slate-500">{row.basis}</div>
+                  </td>
+                  <td className="py-2">{pct(row.target)}</td>
+                  <td className={`py-2 ${showRun ? "font-bold text-blue-800" : ""}`}>
+                    {showRun ? pct(run) : pct(row.model)}
+                    {showRun ? <div className="text-xs font-medium text-slate-600">{detail}</div> : null}
+                  </td>
+                  <td className={`py-2 font-bold ${checkClass}`}>{checkLabel}</td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
