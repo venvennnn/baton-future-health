@@ -312,8 +312,8 @@ export function CaseRecord({ caseId }: { caseId: string }) {
               </div>
             </form>
             <div className="flex max-h-72 flex-col gap-2 overflow-auto">
-              {[...item.events].reverse().slice(0, 6).map((event) => (
-                <article key={event.id} className="rounded-lg bg-slate-50 p-2 text-xs">
+              {[...item.events].reverse().slice(0, 6).map((event, index) => (
+                <article id={index === 0 ? "audit-latest" : undefined} key={event.id} className={`rounded-lg p-2 text-xs ${index === 0 && event.label.startsWith("Draft approved") ? "bg-emerald-50 ring-2 ring-emerald-400" : "bg-slate-50"}`}>
                   <div className="flex justify-between gap-2 text-slate-500"><span className="font-bold uppercase">{event.kind}{event.simulated ? " · simulated" : ""}</span><span>{event.on}</span></div>
                   <div className="font-bold text-slate-900">{event.label}</div>
                   <p className="text-slate-700">{event.detail}</p>
