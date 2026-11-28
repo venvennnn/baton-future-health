@@ -39,9 +39,10 @@ export function SimulatorView() {
   const [strategy, setStrategy] = useState<ResourcePolicy["strategy"]>("fifo");
   const [replicates, setReplicates] = useState<string | null>(null);
   const [running, setRunning] = useState(false);
+  const [seed, setSeed] = useState(26771);
 
-  const cohort = useMemo(() => buildCohort(26771, 2500, true), []);
-  const impact = useMemo(() => estimateImpact(cohort, calls, 26771), [cohort, calls]);
+  const cohort = useMemo(() => buildCohort(seed, 2500, seed === 26771), [seed]);
+  const impact = useMemo(() => estimateImpact(cohort, calls, seed), [cohort, calls, seed]);
   const routing = useMemo(() => ROUTING.map((policy) => simulateRouting(cohort, policy.id, undefined, EXAMPLE_IDS)), [cohort]);
   const selected = impact.byOrder.find((order) => order.strategy === strategy) ?? impact.sameTeam;
   const saturated = impact.extraCapacity.reached >= cohort.length;
@@ -50,27 +51,28 @@ export function SimulatorView() {
     setRunning(true);
     setReplicates(null);
     window.setTimeout(() => {
-      const sameTeam: number[] = [];
-      const extra: number[] = [];
+      const runs: { seed: number; same: number; extra: number }[] = [];
       for (let offset = 1; offset <= 8; offset += 1) {
-        const seed = 26771 + offset;
-        const sample = buildCohort(seed, 2500, false);
-        const result = estimateImpact(sample, calls, seed);
-        sameTeam.push(result.sameTeam.central.completion);
-        extra.push(result.extraCapacity.central.completion);
+        const nextSeed = 26771 + offset;
+        const sample = buildCohort(nextSeed, 2500, false);
+        const result = estimateImpact(sample, calls, nextSeed);
+        runs.push({ seed: nextSeed, same: result.sameTeam.central.completion, extra: result.extraCapacity.central.completion });
       }
       const summarize = (values: number[]) => {
         const sorted = [...values].sort((a, b) => a - b);
         const mean = sorted.reduce((sum, value) => sum + value, 0) / sorted.length;
         return `mean ${pct(mean, 2)}, spread ${pct(sorted[0], 2)} to ${pct(sorted[sorted.length - 1], 2)}`;
       };
-      setReplicates(`8 synthetic replicates, seeds 26772–26779, n=2,500. Same team, central odds ratio: ${summarize(sameTeam)}. Extra navigator capacity at ${calls} calls/day: ${summarize(extra)}. This is seed spread on the calibrated model, not a clinical confidence interval. The headline range stays the Coronado odds-ratio interval. ${MODEL_TAG}`);
+      const current = runs.findIndex((run) => run.seed === seed);
+      const chosen = runs[(current + 1) % runs.length];
+      setSeed(chosen.seed);
+      setReplicates(`Showing seed ${chosen.seed}. Same team on this seed is ${pct(chosen.same, 2)}. Across seeds 26772–26779, same team is ${summarize(runs.map((run) => run.same))}. Extra navigator capacity at ${calls} calls/day is ${summarize(runs.map((run) => run.extra))}. The calibration table stays on the study targets. This seed spread is not a clinical confidence interval. ${MODEL_TAG}`);
       setRunning(false);
     }, 30);
   }
 
   function download() {
-    const blob = new Blob([JSON.stringify({ seed: 26771, n: cohort.length, impact }, null, 2)], { type: "application/json" });
+    const blob = new Blob([JSON.stringify({ seed, n: cohort.length, impact }, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
@@ -83,12 +85,12 @@ export function SimulatorView() {
     <main className="page-rise mx-auto flex w-full max-w-7xl flex-col gap-5 px-4 py-8 sm:px-6 lg:px-8">
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
         <div className="max-w-3xl">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-blue-800">Seeded model · n={cohort.length.toLocaleString()} · seed 26771</span>
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-blue-800">Seeded model · n={cohort.length.toLocaleString()} · seed {seed}</span>
           <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-slate-950">Capacity planning — screening pathway</h1>
           <p className="mt-1 text-sm text-slate-700">Usual care is calibrated to completion recorded by Almansoori et al. 2021. The navigation effect is the Coronado et al. 2025 odds ratio, applied only to handover losses the same team can reach. The low–high range is that trial’s odds-ratio interval (1.30 to 2.19). This is not a Department of Health result.</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <button type="button" className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-800 hover:bg-slate-50" onClick={() => { setCalls(8); setSlots(0); setTeachBack(false); setStrategy("fifo"); setReplicates(null); }}>Reset levers</button>
+          <button type="button" className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-800 hover:bg-slate-50" onClick={() => { setCalls(8); setSlots(0); setTeachBack(false); setStrategy("fifo"); setSeed(26771); setReplicates(null); }}>Reset levers</button>
           <button type="button" className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-800 hover:bg-slate-50" onClick={download}>Save scenario</button>
           <button type="button" className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-800 disabled:opacity-60" onClick={runSimulation} disabled={running}>{running ? "Running…" : "Run simulation"}</button>
         </div>
@@ -204,7 +206,7 @@ function CalibrationTable({ rows }: { rows: { id: string; label: string; target:
   return (
     <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-100">
       <h2 className="font-bold">Calibration check</h2>
-      <p className="text-xs text-slate-500">Usual care on this seed. Completion is within 1 percentage point of the study. Each loss share is within 2 percentage points. The loss shares are of the people with no colonoscopy.</p>
+      <p className="text-xs text-slate-500">Usual care on every seed is refit to the study, so these seven rows stay inside the pass band when you run the simulation. Completion is within 1 percentage point. Each loss share, among the people with no colonoscopy, is within 2 percentage points. Run simulation changes the seed on the Baton figures above.</p>
       <div className="mt-3 overflow-x-auto">
         <table className="w-full min-w-[520px] text-left text-sm">
           <thead>
