@@ -105,7 +105,7 @@ const COPY: Record<"en" | "ar", Record<TourStepId, StepCopy>> = {
     },
     simulator: {
       title: "A model, not a verification",
-      body: "Calls, outreach order, slots, and teach-back change the Kaplan–Meier figures for this seeded cohort. The result is model output, not a Department of Health figure.",
+      body: "The headline compares usual care, calibrated to the Abu Dhabi study, with Baton at the same navigator calls and the same endoscopy slots. The range is the published trial's odds-ratio interval. Extra calls are a separate result. Teach-back, the readiness gate, and routing are not counted.",
     },
     pareto: {
       title: "Gap down, completions up",
@@ -183,7 +183,7 @@ const COPY: Record<"en" | "ar", Record<TourStepId, StepCopy>> = {
     },
     simulator: {
       title: "نموذج وليس تحققًا",
-      body: "المكالمات وترتيب التواصل والمواعيد والتعليم الراجع تغيّر أرقام كابلان–ماير لهذه المجموعة المبذورة. الناتج مخرجات نموذج، وليس رقمًا لدائرة الصحة.",
+      body: "العنوان يقارن الرعاية المعتادة، المعايرة على دراسة أبوظبي، مع باتون عند نفس مكالمات المنسق ونفس مواعيد التنظير. المدى هو فترة نسبة الأرجحية المنشورة. المكالمات الإضافية نتيجة منفصلة. التعليم الراجع وبوابة الجاهزية والتوجيه غير محسوبة.",
     },
     pareto: {
       title: "الفجوة تنخفض والإكمال يرتفع",

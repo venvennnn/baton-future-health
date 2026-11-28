@@ -1,22 +1,38 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { handoversRecovered } from "./impact";
-import { buildCohort, navigationPolicy, simulateResource } from "./sim/model";
+import { applyOddsRatio, CORONADO, scaleImpact } from "./impact";
 
-describe("handovers recovered", () => {
-  it("is zero at baseline and scales a known difference", () => {
-    expect(handoversRecovered(0.42, 0.42)).toEqual({ perThousand: 0, ofPaper: 0 });
-    const recovered = handoversRecovered(0.5, 0.4);
-    expect(recovered.perThousand).toBeCloseTo(100, 6);
-    expect(recovered.ofPaper).toBeCloseTo(142.9, 6);
-    expect(handoversRecovered(1, 0).ofPaper).toBe(585);
+describe("Coronado odds ratio", () => {
+  it("turns a 42.1% usual-care rate into about 55% at the central odds ratio", () => {
+    const navigated = applyOddsRatio(CORONADO.usualCare, CORONADO.oddsRatio);
+    expect(Math.abs(navigated - CORONADO.navigation)).toBeLessThanOrEqual(0.015);
+    expect(applyOddsRatio(CORONADO.usualCare, CORONADO.oddsRatioLow)).toBeLessThan(navigated);
+    expect(applyOddsRatio(CORONADO.usualCare, CORONADO.oddsRatioHigh)).toBeGreaterThan(navigated);
   });
+});
 
-  it("is positive for the default navigation run against its baseline", () => {
-    const cohort = buildCohort(26771, 400, false);
-    const baseline = simulateResource(cohort, navigationPolicy(6, 0, false, "fifo"));
-    const uplift = simulateResource(cohort, navigationPolicy(8, 15, true, "benefit"));
-    const recovered = handoversRecovered(uplift.km.atHorizon ?? 0, baseline.km.atHorizon ?? 0);
-    expect(recovered.perThousand).toBeGreaterThan(0);
-    expect(recovered.ofPaper).toBeCloseTo(Math.min(585, Math.max(0, ((uplift.km.atHorizon ?? 0) - (baseline.km.atHorizon ?? 0)) * 1429)), 5);
+describe("scaled impact", () => {
+  it("scales a rate difference to 1,000 tests and to the 1,429-person study", () => {
+    expect(scaleImpact(0)).toEqual({ perThousand: 0, ofMissed: 0 });
+    const scaled = scaleImpact(0.1);
+    expect(scaled.perThousand).toBeCloseTo(100, 6);
+    expect(scaled.ofMissed).toBeCloseTo(142.9, 6);
+  });
+});
+
+describe("no hard-coded impact strings", () => {
+  it("does not keep the old recovery claims in the pages that show impact", () => {
+    const paths = [
+      "components/simulator-view.tsx",
+      "app/governance/page.tsx",
+      "components/leakage-panel.tsx",
+      "lib/impact.ts",
+      "lib/sim/calibration.ts",
+    ];
+    const banned = ["17.7%", "17.4%", "195 of 585", "of the 585", "≈195", "137 handovers", "day 180"];
+    for (const path of paths) {
+      const source = readFileSync(path, "utf8");
+      for (const phrase of banned) expect(source, `${path} contains ${phrase}`).not.toContain(phrase);
+    }
   });
 });
