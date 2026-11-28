@@ -99,7 +99,9 @@ export const BASE_FACILITIES: SimFacility[] = ENDOSCOPY_FACILITIES.map((facility
   femaleTeam: facility.femaleTeam,
 }));
 
-export const HORIZON = 180;
+// Default matches the 1-year primary outcome in Coronado et al. 2025.
+// TODO(team): confirm Almansoori follow-up window. Do not present a window for that study in the UI.
+export const HORIZON = 365;
 export const DEFAULT_COHORT_SIZE = 2500;
 export const DEFAULT_SEED = 26771;
 
@@ -165,7 +167,7 @@ function anchorFromCase(item: ScreeningCase, index: number, roll: SimPatient): S
     femalePref: item.femaleTeamRequested,
     referralDay: 0,
     anchor: true,
-    censorDay: item.closed ? 181 : roll.censorDay,
+    censorDay: item.closed ? HORIZON + 1 : roll.censorDay,
   };
 }
 
@@ -202,7 +204,7 @@ export function buildCohort(seed = DEFAULT_SEED, size = DEFAULT_COHORT_SIZE, anc
       if (uniqueEligible.includes(south) && rand() < 0.55) designatedPool = [south];
     }
     const designated = designatedPool[Math.floor(rand() * designatedPool.length)] ?? uniqueEligible[0];
-    const censorDay = rand() < 0.14 ? 12 + Math.floor(rand() * 150) : 181;
+    const censorDay = rand() < 0.14 ? 12 + Math.floor(rand() * 150) : HORIZON + 1;
     patients.push({
       id: `SYN-${String(index + 1).padStart(4, "0")}`,
       index,

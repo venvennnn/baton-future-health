@@ -2,9 +2,35 @@
 
 import { useDemo } from "@/components/providers";
 import { daysSinceResult } from "@/lib/analytics";
+import { ALMANSOORI } from "@/lib/impact";
 import { handoverLoss, leakage, type LeakageId } from "@/lib/leakage";
 import { dropoutRisk } from "@/lib/risk";
 import { useMemo, useState } from "react";
+
+const PUBLISHED_COLOUR = ["bg-red-800", "bg-red-600", "bg-red-400", "bg-amber-700", "bg-amber-500", "bg-slate-500"];
+
+function PublishedBaseline() {
+  const missed = ALMANSOORI.noColonoscopy;
+  return (
+    <div className="mt-4 border-t border-slate-100 pt-4">
+      <h3 className="text-sm font-bold text-slate-950">Published baseline</h3>
+      <p className="text-xs text-slate-600">Almansoori et al., BMC Cancer 2021. Completion recorded in the study: {ALMANSOORI.completed.toLocaleString()} of {ALMANSOORI.positiveTests.toLocaleString()} ({((ALMANSOORI.completed / ALMANSOORI.positiveTests) * 100).toFixed(1)}%). Shares below are of the {missed.toLocaleString()} with no colonoscopy. This is the study, not the case file above. The abstract says 933; Table 5 sums to {missed.toLocaleString()}.</p>
+      <div className="mt-3 flex h-6 overflow-hidden rounded-full bg-slate-100">
+        {ALMANSOORI.losses.map((loss, index) => (
+          <div key={loss.id} title={`${loss.label}: ${loss.count}`} className={`${PUBLISHED_COLOUR[index]} h-full`} style={{ width: `${(loss.count / missed) * 100}%` }} />
+        ))}
+      </div>
+      <ul className="mt-3 grid gap-1 text-xs font-semibold text-slate-800 sm:grid-cols-2">
+        {ALMANSOORI.losses.map((loss, index) => (
+          <li key={loss.id}>
+            <span className={`mr-1 inline-block h-2 w-2 rounded-full ${PUBLISHED_COLOUR[index]}`} />
+            {loss.label} · {loss.count} · {((loss.count / missed) * 100).toFixed(1)}%
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
 
 const COLOUR: Record<LeakageId, string> = {
   never_got_result: "bg-red-700",
@@ -82,7 +108,8 @@ export function LeakagePanel() {
           )}
         </div>
       ) : null}
-      <p className="mt-3 text-xs text-slate-600">Categories mirror Almansoori et al., BMC Cancer 2021 (Abu Dhabi) so programme leads can compare against the published baseline.</p>
+      <p className="mt-3 text-xs text-slate-600">The three handover losses use the same names as the published baseline below. In progress and closed with a disposition are this case file’s working states.</p>
+      <PublishedBaseline />
     </section>
   );
 }

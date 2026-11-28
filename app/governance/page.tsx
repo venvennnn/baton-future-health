@@ -3,12 +3,16 @@ import { entryHref } from "@/lib/access";
 import { getCase } from "@/lib/cases";
 import { requireRole } from "@/lib/guard";
 import { DEFAULT_DRAFT_MODEL } from "@/lib/draft-model";
+import { ALMANSOORI_CITATION, CORONADO_CITATION } from "@/lib/impact";
 import { MODEL_CARD, RISK_WEIGHTS } from "@/lib/risk";
+import { estimateImpact } from "@/lib/sim/calibration";
+import { buildCohort } from "@/lib/sim/model";
 import Link from "next/link";
 
 export default async function GovernancePage() {
   await requireRole("admin");
   const demo = getCase("FIT-26771");
+  const evidence = estimateImpact(buildCohort(26771, 2500, true), 8, 26771).evidence;
   const bundle = {
     resourceType: "Bundle",
     type: "collection",
@@ -78,8 +82,35 @@ export default async function GovernancePage() {
           <li>A clinician reviews the draft and must approve it before it is saved. Nothing is sent to a patient or another system.</li>
           <li>Drafts call Gemini ({DEFAULT_DRAFT_MODEL}) when GEMINI_API_KEY is set. Only the synthetic case record is sent. If the key is missing, or the call times out, a template built from those same fields is used.</li>
           <li>In production this would run on an approved in-region deployment (for example via the challenge&apos;s cloud partners) with no PHI leaving the jurisdiction.</li>
-          <li>Handovers recovered in Capacity planning are the Kaplan–Meier colonoscopy rate at day 180 minus usual care (6 calls/day, first come first served, no extra slots, teach-back off), times 1,000. The paper-scale line uses the same difference times 1,429 and stops at 585. This is a synthetic cohort simulation, not a forecast.</li>
         </ul>
+      </section>
+      <section id="evidence" className="rounded-2xl border border-slate-200 bg-white p-5 text-sm">
+        <h2 className="text-xl font-bold">Evidence & calibration</h2>
+        <p className="mt-2">{ALMANSOORI_CITATION}</p>
+        <p className="mt-2">{CORONADO_CITATION}</p>
+        <p className="mt-2 text-slate-600">Capacity planning uses these parameters. A row sourced to a paper is a published figure. A row marked assumption was not taken from either paper. The calibration check on Capacity planning compares the synthetic usual-care mix with the study.</p>
+        <div className="mt-4 overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead>
+              <tr className="uppercase tracking-wide text-slate-500">
+                <th className="py-1 pr-2">Parameter</th>
+                <th className="py-1 pr-2">Value</th>
+                <th className="py-1 pr-2">Range</th>
+                <th className="py-1">Source</th>
+              </tr>
+            </thead>
+            <tbody>
+              {evidence.map((row) => (
+                <tr key={row.parameter} className="border-t border-slate-100 align-top">
+                  <td className="py-1.5 pr-2 font-semibold">{row.parameter}</td>
+                  <td className="py-1.5 pr-2">{row.value}</td>
+                  <td className="py-1.5 pr-2">{row.range}</td>
+                  <td className="py-1.5">{row.source}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </section>
       <section id="audit">
         <h2 className="text-xl font-bold">Example bundle for {demo?.id}</h2>
